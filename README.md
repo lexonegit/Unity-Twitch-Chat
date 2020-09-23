@@ -39,3 +39,6 @@ This solution uses multithreading and because Unity API isn't thread safe I've a
 - **Chatter.CheckDisplayName()** -> Returns true if chatter's displayName contains non-latin characters/symbols
 - **Chatter.MessageContainsEmote(string id)** -> Returns true if chat message contains a specific emote (id)
 - **Chatter.HasBadge(string name)** -> Returns true if chatter has a specific badge
+
+## Projects made with Unity Twitch Chat
+Intro Fighters, stream overlay game https://lexone.itch.io/introfighters
