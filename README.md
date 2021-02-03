@@ -42,3 +42,5 @@ This solution uses multithreading and because Unity API isn't thread safe I've a
 
 ## Projects made with Unity Twitch Chat
 Intro Fighters, stream overlay game https://lexone.itch.io/introfighters
+
+*Did you create something? Contact me to get featured here.*
