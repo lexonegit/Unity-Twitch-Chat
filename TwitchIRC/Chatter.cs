@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [System.Serializable]
 public class Chatter
@@ -18,9 +18,12 @@ public class Chatter
             return new Color(1, 1, 1, 1);
     }
 
-    public bool CheckDisplayName()
+    /// <summary>
+    /// Returns true if name is "font-safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
+    /// </summary>
+    public bool IsDisplayNameFontSafe()
     {
-        return ParseHelper.CheckDisplayNameCharacters(tags.displayName);
+        return ParseHelper.CheckNameRegex(tags.displayName);
     }
 
     public bool MessageContainsEmote(string emoteId)

@@ -1,7 +1,9 @@
 ﻿using System.Text.RegularExpressions;
+using System.Net.Sockets;
 
 public static class ParseHelper
 {
+    
     public static int IndexOfNth(this string source, char val, int nth = 0)
     {
         int index = source.IndexOf(val);
@@ -18,7 +20,7 @@ public static class ParseHelper
     }
 
     private static Regex symbolRegex = new Regex(@"^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
-    public static bool CheckDisplayNameCharacters(string displayName)
+    public static bool CheckNameRegex(string displayName)
     {
         // If unusual characters/symbols are present in user's displayName then use the actual login name instead (login name is always lowercase)
         // This is useful because most fonts do not support those characters
