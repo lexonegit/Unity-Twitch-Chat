@@ -1,47 +1,38 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
 using System.IO;
 using System.Threading;
 using UnityEngine;
 
-public static class NetworkStreamExtensionMethods
-{
-    public static void WriteLine(this NetworkStream stream, string output, bool debug = false)
-    {
-        if (debug)
-            Debug.Log("<color=#c91b00><b>[IRC OUTPUT]</b></color> Sending command: " + output);
-
-        byte[] bytes = Encoding.UTF8.GetBytes(output);
-        stream.Write(bytes, 0, bytes.Length);
-        stream.WriteByte((byte)'\r');
-        stream.WriteByte((byte)'\n');
-        stream.Flush();
-    }
-}
-
+// https://github.com/lexonegit/Unity-Twitch-Chat
 public class TwitchIRC : MonoBehaviour
 {
     [HideInInspector] public class NewChatMessageEvent : UnityEngine.Events.UnityEvent<Chatter> { }
     [HideInInspector] public class StatusEvent : UnityEngine.Events.UnityEvent<StatusType, string, int> { }
 
     // Events
-    public NewChatMessageEvent newChatMessageEvent = new NewChatMessageEvent();
-    public StatusEvent statusEvent = new StatusEvent();
+    public NewChatMessageEvent newChatMessageEvent = new NewChatMessageEvent(); // New chat messages
+    public StatusEvent statusEvent = new StatusEvent(); // Connection events
 
     private TcpClient client;
     private NetworkStream stream;
 
+    public string ircAddress = "irc.chat.twitch.tv";
+    public int port = 6667;
+
+    public TwitchDetails twitchDetails;
     public Settings settings;
-    public UserInput details;
 
     [Header("Client chatter object")]
-    public Chatter userChatter;
+    [Tooltip("Contains some information about the client user (OAuth)")] public Chatter clientChatter;
 
     private bool connected = false;
+    private Thread outputThread = null;
+    private Thread inputThread = null;
 
     [System.Serializable]
-    public class UserInput
+    public class TwitchDetails
     {
         public string oauth = string.Empty;
         public string nick = string.Empty;
@@ -51,9 +42,6 @@ public class TwitchIRC : MonoBehaviour
     [System.Serializable]
     public class Settings
     {
-        public string server = "irc.chat.twitch.tv";
-        public int port = 6667;
-        [Space(12f)]
         public bool connectOnStart = true;
         public bool parseBadges = true;
         public bool parseTwitchEmotes = true;
@@ -61,10 +49,11 @@ public class TwitchIRC : MonoBehaviour
         public bool debugIRC = true;
     }
 
-    private void Awake()
+    #region Unity MonoBehaviour functions
+    private void Start()
     {
         if (settings.connectOnStart)
-            Connect();
+            StartCoroutine(PrepareConnection());
     }
 
     private void OnDestroy()
@@ -76,57 +65,59 @@ public class TwitchIRC : MonoBehaviour
     {
         Disconnect();
     }
+    #endregion
 
-    [ContextMenu("Connect")]
-    public void Connect()
+    [ContextMenu("Connect IRC")]
+    public void IRC_Connect() 
     {
-        if (details.oauth.Length <= 0 || details.nick.Length <= 0 || details.channel.Length <= 0)
+        StartCoroutine(PrepareConnection());
+    }
+
+    [ContextMenu("Disconnect IRC")]
+    public void IRC_Disconnect() 
+    {
+        Disconnect();
+    }
+
+    private IEnumerator PrepareConnection()
+    {
+        if (inputThread != null && outputThread != null)
+            while (inputThread.IsAlive || outputThread.IsAlive) // Wait for previous threads to close (if there are any)
+                yield return null;
+
+        if (twitchDetails.oauth.Length <= 0 || twitchDetails.nick.Length <= 0 || twitchDetails.channel.Length <= 0)
         {
-            ConnectionStateAlert(StatusType.Error, "Missing required details!");
-            return;
+            ConnectionStateAlert(StatusType.Error, "Missing required details! Check your Twitch details.");
+            yield break;
         }
 
-        //Fix formatting (twitchapps.com)
-        if (details.oauth.StartsWith("oauth:"))
-            details.oauth = details.oauth.Substring(6);
+        // Fix formatting (twitchapps.com)
+        if (twitchDetails.oauth.StartsWith("oauth:"))
+            twitchDetails.oauth = twitchDetails.oauth.Substring(6);
 
         ConnectIRC();
     }
 
-    public enum StatusType { Normal, Success, Error };
-    public void ConnectionStateAlert(StatusType state, string message, int percentage = 0)
+    private void ConnectIRC()
     {
-        switch (state)
-        {
-            case StatusType.Error:
-                Debug.LogError("<color=red><b>[ERROR]</b></color>: " + message);
-                break;
-
-            case StatusType.Normal:
-                Debug.Log("<color=#0018a1><b>[STATUS]</b></color>: <b>" + percentage + "%</b> " + message);
-                break;
-
-            case StatusType.Success:
-                Debug.Log("<color=#0ea300><b>[SUCCESS]</b></color>: <b>" + percentage + "%</b> " + message);
-                break;
-        }
-
-        // Send status event to other listeners
-        statusEvent.Invoke(state, message, percentage);
-    }
-
-    [ContextMenu("Connect IRC")]
-    public void ConnectIRC()
-    {
-        client = new TcpClient(settings.server, settings.port); // Connect to Twitch IRC
+        client = new TcpClient(ircAddress, port); // Connect to Twitch IRC
         stream = client.GetStream();
 
-        stream.WriteLine("PASS oauth:" + details.oauth.ToLower());
-        stream.WriteLine("NICK " + details.nick.ToLower());
+        if (!client.Connected)
+        {
+            ConnectionStateAlert(StatusType.Error, "Failed connecting to Twitch IRC.");
+            return;
+        }
+
+        stream.WriteLine("PASS oauth:" + twitchDetails.oauth.ToLower());
+        stream.WriteLine("NICK " + twitchDetails.nick.ToLower());
         stream.WriteLine("CAP REQ :twitch.tv/tags twitch.tv/commands");
 
         connected = true;
+        MainThread.Instance.Clear();
+        outputQueue.Clear();
 
+        // Initialize threads
         inputThread = new Thread(() => IRCInputProc());
         outputThread = new Thread(() => IRCOutputProc());
 
@@ -135,79 +126,95 @@ public class TwitchIRC : MonoBehaviour
         outputThread.Start();
     }
 
-
-    [ContextMenu("Disconnect")]
-    public void Disconnect()
+    private void Disconnect(bool reconnect = false)
     {
         if (!connected) return;
 
         connected = false; // Stop threads
-
+        
         client.Close();
         stream.Close();
-
+        
         Debug.LogWarning("Disconnected from Twitch IRC");
+
+        if (reconnect)
+            StartCoroutine(PrepareConnection());
     }
 
-
-    private Thread outputThread;
-    private Thread inputThread;
     private void IRCInputProc()
     {
         Debug.Log("IRCInput Thread (Receive) started");
 
-        StreamReader reader = new StreamReader(stream);
-        string raw;
-
-        while (connected)
+        using (StreamReader reader = new StreamReader(stream)) 
         {
-            // try-catch is needed because ReadLine() is a blocking call and disconnecting will cause an exception
-            try { raw = reader.ReadLine(); }
-            catch { break; }
-
-            if (raw == null) // Ignore empty lines
-                continue;
-
-            if (settings.debugIRC)
-                Debug.Log("<color=#005ae0><b>[IRC INPUT]</b></color> " + raw);
-
-            string ircString = raw;
-            string tagString = string.Empty;
-
-            if (raw[0] == '@')
+            string raw;
+            while (connected)
             {
-                int ind = raw.IndexOf(' ');
-
-                tagString = raw.Substring(0, ind);
-                ircString = raw.Substring(ind).TrimStart();
-            }
-
-            if (ircString[0] == ':')
-            {
-                string type = ircString.Substring(ircString.IndexOf(' ')).TrimStart();
-                type = type.Substring(0, type.IndexOf(' '));
-
-                switch (type)
+                // try-catch is needed because ReadLine() is a blocking call and disconnecting will cause an exception without it
+                try { raw = reader.ReadLine(); }
+                catch // Add (System.Exception err) here to debug error messages
                 {
-                    case "PRIVMSG": //Message
-                        HandlePRIVMSG(ircString, tagString);
-                        break;
-                    case "USERSTATE": //Userstate
-                        HandleUSERSTATE(ircString, tagString);
-                        break;
-                    case "353": //Successful channel join
-                        HandleRPL(type);
-                        break;
-                    case "001": //Successful IRC connection
-                        HandleRPL(type);
-                        break;
-                }
-            }
+                    // ReadLine() was interrupted. Perhaps Disconnect() was called?
+                    // ...however sometimes ReadLine() fails with mysterious errors like:
+                    //
+                    // "System.IO.IOException: Unable to read data from the transport connection: An established connection was aborted by the software in your host machine."
+                    // or something else... Not sure why they happen. It is seemingly random.
+                    //
+                    // When this happens, we are still "connected" so try reconnecting
+                    //
+                    if (connected)
+                    {
+                        Debug.LogError("Error while reading IRC input. Reconnecting...");
+                        MainThread.Instance.Enqueue(() => Disconnect(true)); // Disconnect, but then reconnect
+                    }
 
-            //Respond to PING messages
-            if (raw.StartsWith("PING"))
-            {
-                SendCommand("PONG :tmi.twitch.tv", true);
+                    break; // Stop this thread loop
+                }
+
+                if (raw == null) // Ignore empty lines
+                    continue;
+
+                if (settings.debugIRC)
+                    Debug.Log("<color=#005ae0><b>[IRC INPUT]</b></color> " + raw);
+
+                string ircString = raw;
+                string tagString = string.Empty;
+
+                if (raw[0] == '@')
+                {
+                    int ind = raw.IndexOf(' ');
+
+                    tagString = raw.Substring(0, ind);
+                    ircString = raw.Substring(ind).TrimStart();
+                }
+
+                if (ircString[0] == ':')
+                {
+                    string type = ircString.Substring(ircString.IndexOf(' ')).TrimStart();
+                    type = type.Substring(0, type.IndexOf(' '));
+
+                    switch (type)
+                    {
+                        case "PRIVMSG": // = Chat message
+                            HandlePRIVMSG(ircString, tagString);
+                            break;
+                        case "USERSTATE": // = Userstate
+                            HandleUSERSTATE(ircString, tagString);
+                            break;
+                        case "353": // = Successful channel join
+                            HandleRPL(type);
+                            break;
+                        case "001": // = Successful IRC connection
+                            HandleRPL(type);
+                            break;
+                    }
+                }
+
+                //Respond to PING messages
+                if (raw.StartsWith("PING"))
+                {
+                    SendCommand("PONG :tmi.twitch.tv", true);
+                }
             }
         }
 
@@ -227,12 +234,10 @@ public class TwitchIRC : MonoBehaviour
             if (outputQueue.Count <= 0)
                 continue;
 
-            string output = outputQueue.Dequeue();
+            // Send next output from outputQueue
+            stream.WriteLine(outputQueue.Dequeue(), settings.debugIRC);
 
-            // Send the output
-            stream.WriteLine(output, settings.debugIRC);
-
-            //Cooldown timer
+            //Cooldown timer (to avoid Twitch chat ratelimiting)
             cooldown.Restart();
             while (cooldown.ElapsedMilliseconds < 1750)
                 continue; 
@@ -246,11 +251,11 @@ public class TwitchIRC : MonoBehaviour
         switch (type)
         {
             case "001":
-                SendCommand("JOIN #" + details.channel.ToLower());
-                ConnectionStateAlert(StatusType.Success, "Connected to Twitch IRC. Now joining channel: " + details.channel + "...", 100);
+                SendCommand("JOIN #" + twitchDetails.channel.ToLower());
+                ConnectionStateAlert(StatusType.Success, "Connected to Twitch IRC. Now joining channel: " + twitchDetails.channel + "...", 100);
                 break;
             case "353":
-                Debug.Log("<color=#bd2881><b>[JOIN]</b></color> Joined channel: " + details.channel + " successfully");
+                Debug.Log("<color=#bd2881><b>[JOIN]</b></color> Joined channel: " + twitchDetails.channel + " successfully");
                 break;
         }
     }
@@ -283,7 +288,7 @@ public class TwitchIRC : MonoBehaviour
         // Parse Tags
         IRCTags tags = ParseHelper.ParseTags(tagString, settings.parseBadges, settings.parseTwitchEmotes);
 
-        userChatter = new Chatter(userstate, tags);
+        clientChatter = new Chatter(userstate, tags);
     }
 
     public void SendCommand(string command, bool instant = false)
@@ -302,6 +307,28 @@ public class TwitchIRC : MonoBehaviour
         if (message.Length <= 0) // Message can't be empty
             return;
 
-        outputQueue.Enqueue("PRIVMSG #" + details.channel + " :" + message); // Place message in queue
+        outputQueue.Enqueue("PRIVMSG #" + twitchDetails.channel + " :" + message); // Place message in queue
+    }
+
+    public enum StatusType { Normal, Success, Error };
+    public void ConnectionStateAlert(StatusType state, string message, int percentage = 0)
+    {
+        switch (state)
+        {
+            case StatusType.Error:
+                Debug.LogError("<color=red><b>[ERROR]</b></color>: " + message);
+                break;
+
+            case StatusType.Normal:
+                Debug.Log("<color=#0018a1><b>[STATUS]</b></color>: <b>" + percentage + "%</b> " + message);
+                break;
+
+            case StatusType.Success:
+                Debug.Log("<color=#0ea300><b>[SUCCESS]</b></color>: <b>" + percentage + "%</b> " + message);
+                break;
+        }
+
+        // Send status event to other listeners
+        statusEvent.Invoke(state, message, percentage);
     }
 }

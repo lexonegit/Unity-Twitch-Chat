@@ -37,4 +37,9 @@ public class MainThread : MonoBehaviour
             taskQueue.Enqueue(a);
         }
     }
+
+    public void Clear() 
+    {
+        taskQueue.Clear();
+    }
 }

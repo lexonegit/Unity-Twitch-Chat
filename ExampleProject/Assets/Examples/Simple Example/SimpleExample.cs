@@ -5,7 +5,7 @@ public class SimpleExample : MonoBehaviour
     private TwitchIRC IRC;
     public Chatter latestChatter;
 
-    private void Awake()
+    private void Start()
     {
         // Place TwitchIRC.cs script on an gameObject called "TwitchIRC"
         IRC = GameObject.Find("TwitchIRC").GetComponent<TwitchIRC>();
@@ -17,9 +17,9 @@ public class SimpleExample : MonoBehaviour
     // This gets called whenever a new chat message appears
     public void NewMessage(Chatter chatter)
     {
-        Debug.Log("New chatter object received! " + chatter.tags.displayName);
+        Debug.Log("New chatter object received! Chatter name: " + chatter.tags.displayName);
 
-        // Some examples on how you could use the chatter objects
+        // Some examples on how you could use the chatter objects...
 
         if (chatter.tags.displayName == "Lexone")
             Debug.Log("Chat message was sent by Lexone!");
@@ -40,19 +40,18 @@ public class SimpleExample : MonoBehaviour
         //
         Color nameColor = chatter.GetRGBAColor();
 
-        // Check chatter's display name for unusual characters
+        // Check if chatter's display name is "font safe"
         //
-        // This can be useful to check for because most fonts don't support unusual characters
+        // Most fonts don't support unusual characters
         // If that's the case then you could use their login name instead (chatter.login) or use a fallback font
         // Login name is always lowercase and can only contain characters: a-z, A-Z, 0-9, _
         //
-        if (chatter.CheckDisplayName())
-            Debug.Log("Chatter's displayName contains characters other than a-z, A-Z, 0-9, _");
+        if (!chatter.IsDisplayNameFontSafe())
+            Debug.Log("Chatter's displayName is font-safe (only characters: a-z, A-Z, 0-9, _)");
 
 
 
-
-
+        // This is just to show how the Chatter object looks like inside the Inspector
         latestChatter = chatter;
     }
 }
