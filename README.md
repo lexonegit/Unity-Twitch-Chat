@@ -20,7 +20,7 @@ This solution uses multithreading and because Unity API isn't thread safe I've a
 
 **I recommend looking at the included ExampleProject for a better understanding**
 
-1. Add the **MainThread prefab** into your scene *Assets/MainThread/MainThread.prefab*
+1. Add the **MainThread prefab** into your scene *TwitchIRC/MainThread/MainThread.prefab*
 2. Create a new empty GameObject and add **TwitchIRC.cs** on it
 3. Enter your Twitch details (OAuth, nick, channel) inside the inspector
 4. Create a new empty GameObject and a new C# script with an reference to the **TwitchIRC.cs** component
