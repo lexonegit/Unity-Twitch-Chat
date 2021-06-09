@@ -46,7 +46,7 @@ public class SimpleExample : MonoBehaviour
         // If that's the case then you could use their login name instead (chatter.login) or use a fallback font
         // Login name is always lowercase and can only contain characters: a-z, A-Z, 0-9, _
         //
-        if (!chatter.IsDisplayNameFontSafe())
+        if (chatter.IsDisplayNameFontSafe())
             Debug.Log("Chatter's displayName is font-safe (only characters: a-z, A-Z, 0-9, _)");
 
 
