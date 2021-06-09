@@ -27,8 +27,8 @@ public static class ParseHelper
         //
         // Allowed characters are: a-z, A-Z, 0-9, _
 
-        // True = symbols detected
-        return symbolRegex.IsMatch(displayName);
+        // False = symbols detected
+        return !symbolRegex.IsMatch(displayName);
     }
 
     public static IRCTags ParseTags(string tagString, bool parseBadges, bool parseTwitchEmotes)
