@@ -381,8 +381,8 @@ MonoBehaviour:
     m_LineSpacing: 1
   m_Text: 'SIMPLE EXAMPLE
 
-    - Look inside SimpleExample.cs to see how you can
-    use Unity Twitch Chat'
+    - Look inside SimpleExample.cs to see examples of
+    use'
 --- !u!222 &1138202100
 CanvasRenderer:
   m_ObjectHideFlags: 0

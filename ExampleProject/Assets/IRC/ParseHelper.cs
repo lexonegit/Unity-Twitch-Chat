@@ -3,7 +3,7 @@ using System.Net.Sockets;
 
 public static class ParseHelper
 {
-    
+
     public static int IndexOfNth(this string source, char val, int nth = 0)
     {
         int index = source.IndexOf(val);
@@ -48,7 +48,7 @@ public static class ParseHelper
             switch (split[i].Substring(0, split[i].IndexOf('=')))
             {
                 case "badges":
-                    if (parseBadges) 
+                    if (parseBadges)
                         tags.badges = ParseBadges(value.Split(','));
                     continue;
 
@@ -61,8 +61,16 @@ public static class ParseHelper
                     continue;
 
                 case "emotes":
-                    if (parseTwitchEmotes) 
+                    if (parseTwitchEmotes)
                         tags.emotes.AddRange(ParseTwitchEmotes(value.Split('/')));
+                    continue;
+
+                case "room-id": // room-id = channelId
+                    tags.channelId = value;
+                    continue;
+
+                case "user-id":
+                    tags.userId = value;
                     continue;
             }
         }

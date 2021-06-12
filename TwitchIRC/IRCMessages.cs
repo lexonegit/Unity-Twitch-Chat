@@ -23,9 +23,11 @@ public struct ChatterBadge
 [System.Serializable]
 public class IRCTags
 {
-	public string colorHex = "#FFFFFF";
+    public string colorHex = "#FFFFFF";
     public string displayName = string.Empty;
-	
+    public string channelId = string.Empty;
+    public string userId = string.Empty;
+
     public ChatterBadge[] badges = new ChatterBadge[0];
     public List<ChatterEmote> emotes = new List<ChatterEmote>();
 }
