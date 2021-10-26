@@ -1,0 +1,6 @@
+{
+  "name": "com.lexonegit.twitch-irc",
+  "version": "1.0.0",
+  "displayName": "Twitch IRC for Unity",
+  "description": "A lightweight Twitch.tv IRC client for Unity."
+}
