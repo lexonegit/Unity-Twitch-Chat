@@ -144,19 +144,6 @@ namespace Lexonegit.UnityTwitchChat
                 if (taskQueue.TryDequeue(out var task))
                     task.Invoke();
             }
-
-
-            /* TODO
-             * Unclear why this is necessary. Sometimes, right after a new TcpClient is created, the socket says
-             * it has been shutdown. This catches that case and reconnects.
-            */
-
-            // Reconnect if the socket is disconnected
-            if (connected && !CheckSocketConnection(client.Client))
-            {
-                Debug.LogWarning("Socket is unexpectedly disconnected. Reconnecting...");
-                Connect();
-            }
         }
 
         private void OnDestroy()
@@ -245,10 +232,12 @@ namespace Lexonegit.UnityTwitchChat
             // Initialize threads
             receiveThread = new Thread(() => IRCInputProc());
             sendThread = new Thread(() => IRCOutputProc());
+            connectionThread = new Thread(() => CheckSocketProc());
 
             // Start threads
             receiveThread.Start();
             sendThread.Start();
+            connectionThread.Start();
 
             // Queue login commands
             SendCommand("PASS oauth:" + twitchDetails.oauth.ToLower(), true);
@@ -272,6 +261,8 @@ namespace Lexonegit.UnityTwitchChat
                 yield return null;
             while (sendThread.IsAlive)
                 yield return null;
+            while (connectionThread.IsAlive)
+                yield return null;
 
             // Close the TcpClient
             client.Close();
@@ -293,28 +284,12 @@ namespace Lexonegit.UnityTwitchChat
             // Wait for threads to close
             receiveThread.Join();
             sendThread.Join();
+            connectionThread.Join();
 
             // Close the TcpClient
             client.Close();
 
             Debug.LogWarning("Disconnected from Twitch IRC");
-        }
-
-        /// <summary>
-        /// Checks whether the socket is still connected to the network.
-        /// </summary>
-        private bool CheckSocketConnection(Socket socket)
-        {
-            var poll = socket.Poll(1000, SelectMode.SelectRead);
-            var avail = (socket.Available == 0);
-            if ((poll && avail) || !socket.Connected)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
         }
 
         /// <summary>
@@ -389,6 +364,52 @@ namespace Lexonegit.UnityTwitchChat
         }
 
         #endregion
+
+        private const int connectionCheckInterval = 500;
+        private Thread connectionThread = null;
+
+        /// <summary>
+        /// Thread process which checks whether the socket is still connected to the network.
+        /// </summary>
+        private void CheckSocketProc()
+        {
+            /* TODO
+             * Unclear why this is necessary. Sometimes, right after a new TcpClient is created, the socket says
+             * it has been shutdown. This catches that case and reconnects.
+            */
+
+            while (connected)
+            {
+                // Reconnect if the socket is disconnected
+                if (!CheckSocketConnection(client.Client))
+                {
+                    Debug.LogWarning("Socket is unexpectedly disconnected. Reconnecting...");
+                    taskQueue.Enqueue(() => Connect());
+                    break;
+                }
+                else
+                {
+                    Thread.Sleep(connectionCheckInterval);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks whether the socket is still connected to the network.
+        /// </summary>
+        private bool CheckSocketConnection(Socket socket)
+        {
+            var poll = socket.Poll(1000, SelectMode.SelectRead);
+            var avail = (socket.Available == 0);
+            if ((poll && avail) || !socket.Connected)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
     }
 
 }
