@@ -2,9 +2,9 @@
 
 This is a lightweight [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.
 
-Unity Twitch Chat allows you to integrate Twitch Chat to your Unity projects.
+Unity Twitch Chat allows you to integrate Twitch Chat with your Unity projects.
 
-This solution uses multithreading and because Unity API isn't thread safe I've also included a script (**MainThread.cs**) that enqueues tasks for the main thread to process.
+This solution uses multithreading to send/receive messages to/from Twitch using IRC. Received messages are queued into the main thread and propagated through the client's ChatMessageEvent.
 
 **Note:** Only normal chat messages are currently supported. Whispers, subscriber messages, etc are not implemented. WebGL is not supported.
 
@@ -20,24 +20,18 @@ This solution uses multithreading and because Unity API isn't thread safe I've a
 
 **I recommend looking at the included ExampleProject for a better understanding**
 
-1. Add the **MainThread prefab** into your scene *TwitchIRC/MainThread/MainThread.prefab*
-2. Create a new empty GameObject and add **TwitchIRC.cs** on it
+1. Create a new empty GameObject and add **TwitchIRC.cs** to it
 3. Enter your Twitch details (OAuth, nick, channel) inside the inspector
-4. Create a new empty GameObject and a new C# script with an reference to the **TwitchIRC.cs** component
-5. In the new C# script, add a listener to **TwitchIRC.newChatMessageEvent**
-
-## Included example project
-
-Spawn chatters as jumping rigidbody boxes
-
-<img src="https://i.imgur.com/QIh9g2D.gif" width="70%">
+4. Create a new empty GameObject and a new C# script with a reference to the **TwitchIRC.cs** component
+5. In your new C# script, add a listener to **TwitchIRC.ChatMessageEvent**
 
 ## API
 
 #### TwitchIRC.cs
-- **TwitchIRC.IRC_Connect()** -> Connects to Twitch IRC
-- **TwitchIRC.IRC_Disconnect()** -> Disconnects from Twitch IRC
+- **TwitchIRC.Connect()** -> Connects to Twitch IRC
+- **TwitchIRC.Disconnect()** -> Disconnects from Twitch IRC
 - **TwitchIRC.SendChatMessage(string)** -> Sends a Twitch chat message
+- **TwitchIRC.ChatMessageEvent** -> Passes Twitch chat messages to listeners
 
 #### Chatter.cs
 - **Chatter.GetRGBAColor()** -> Returns chatter's name color in RGBA format
@@ -46,6 +40,7 @@ Spawn chatters as jumping rigidbody boxes
 - **Chatter.HasBadge(string name)** -> Returns true if chatter has a specific badge
 
 ## Projects made with Unity Twitch Chat
+Rocket Chat, live stream MMO minigame https://joshgrrro.com/rocketchat
 Intro Fighters, stream overlay game https://lexone.itch.io/introfighters
 
-*Did you create something? Contact me to get featured here.*
+*Did you create something? Contact the contributors to get featured here.*
