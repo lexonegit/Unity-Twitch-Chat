@@ -72,18 +72,25 @@ namespace Lexonegit.UnityTwitchChat
 
         #region Events
 
-        [HideInInspector] public class NewChatMessageEvent : UnityEngine.Events.UnityEvent<Chatter> { }
-        [HideInInspector] public class StatusEvent : UnityEngine.Events.UnityEvent<StatusType, string, int> { }
+        /// <summary>
+        /// A delegate which handles a new chat message from the server.
+        /// </summary>
+        public delegate void ChatMessageEventHandler(Chatter chatter);
+
+        /// <summary>
+        /// A delegate which handles a status update from the Twitch IRC client.
+        /// </summary>
+        public delegate void StatusUpdateEventHandler(StatusType statusType, string message, int percent);
 
         /// <summary>
         /// An event which is triggered when a new chat message is received.
         /// </summary>
-        public NewChatMessageEvent newChatMessageEvent = new NewChatMessageEvent();
+        public event ChatMessageEventHandler ChatMessageEvent;
 
         /// <summary>
         /// An event which is triggered when the connection status changes.
         /// </summary>
-        public StatusEvent statusEvent = new StatusEvent();
+        public event StatusUpdateEventHandler StatusUpdateEvent;
 
         #endregion
 
@@ -148,7 +155,7 @@ namespace Lexonegit.UnityTwitchChat
             if (connected && !CheckSocketConnection(client.Client))
             {
                 Debug.LogWarning("Socket is unexpectedly disconnected. Reconnecting...");
-                IRC_Connect();
+                Connect();
             }
         }
 
@@ -168,7 +175,7 @@ namespace Lexonegit.UnityTwitchChat
         /// Connect or reconnect to Twitch IRC.
         /// </summary>
         [ContextMenu("Connect IRC")]
-        public void IRC_Connect()
+        public void Connect()
         {
             StartCoroutine(ConnectCoroutine());
         }
@@ -177,7 +184,7 @@ namespace Lexonegit.UnityTwitchChat
         /// Disconnect from Twitch IRC.
         /// </summary>
         [ContextMenu("Disconnect IRC")]
-        public void IRC_Disconnect()
+        public void Disconnect()
         {
             StartCoroutine(DisconnectCoroutine());
         }
@@ -359,7 +366,7 @@ namespace Lexonegit.UnityTwitchChat
             }
 
             // Send status event to other listeners
-            statusEvent.Invoke(state, message, percentage);
+            StatusUpdateEvent?.Invoke(state, message, percentage);
         }
 
         #region Subclasses

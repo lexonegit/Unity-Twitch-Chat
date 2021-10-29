@@ -98,6 +98,9 @@ namespace Lexonegit.UnityTwitchChat
                     case "USERSTATE": // = Userstate
                         HandleUSERSTATE(ircString, tagString);
                         break;
+                    case "NOTICE": // = Notice
+                        HandleNOTICE(ircString, tagString);
+                        break;
                     case "353": // = Successful channel join
                     case "001": // = Successful IRC connection
                         HandleRPL(type);
@@ -110,6 +113,17 @@ namespace Lexonegit.UnityTwitchChat
                 SendCommand("PONG :tmi.twitch.tv", true);
         }
 
+        /// <summary>
+        /// Handle a NOTICE message from the server.
+        /// </summary>
+        private void HandleNOTICE(string ircString, string tagString)
+        {
+            if (ircString.Contains(":Login authentication failed"))
+            {
+                ConnectionStateAlert(StatusType.Error, "Invalid OAuth credentials. Could not connect to Twitch IRC. Disconnecting...", 100);
+                taskQueue.Enqueue(() => Disconnect());
+            }
+        }
 
         /// <summary>
         /// Handle an RPL message from the server.
@@ -149,7 +163,7 @@ namespace Lexonegit.UnityTwitchChat
 
             // Send chatter object to listeners
             // Invoke in main thread
-            taskQueue.Enqueue(() => newChatMessageEvent.Invoke(new Chatter(privmsg, tags)));
+            taskQueue.Enqueue(() => ChatMessageEvent?.Invoke(new Chatter(privmsg, tags)));
         }
 
         /// <summary>
