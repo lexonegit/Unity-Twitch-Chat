@@ -21,7 +21,6 @@ namespace Lexonegit.UnityTwitchChat
         public StatusEvent statusEvent = new StatusEvent(); // Connection events
 
         private TcpClient client;
-        private NetworkStream stream;
 
         public string ircAddress = "irc.chat.twitch.tv";
         public int port = 6667;
@@ -30,6 +29,11 @@ namespace Lexonegit.UnityTwitchChat
         /// The number of milliseconds between each time the input thread checks for new inputs.
         /// </summary>
         public int readInterval = 100;
+
+        /// <summary>
+        /// The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.
+        /// </summary>
+        public int readBufferSize = 128;
 
         /// <summary>
         /// The number of milliseconds between each time the output thread checks its queues.
@@ -51,10 +55,7 @@ namespace Lexonegit.UnityTwitchChat
         private bool connected
         {
             get => _connected == 1;
-            set
-            {
-                Interlocked.Exchange(ref _connected, value ? 1 : 0);
-            }
+            set => Interlocked.Exchange(ref _connected, value ? 1 : 0);
         }
 
 
@@ -135,7 +136,7 @@ namespace Lexonegit.UnityTwitchChat
             // Wait for previous threads to close (if there are any)
             while (inputThread != null && inputThread.IsAlive)
                 yield return null;
-            while (outputThread != null && inputThread.IsAlive)
+            while (outputThread != null && outputThread.IsAlive)
                 yield return null;
 
             // Verify that login information has been provided
@@ -156,7 +157,6 @@ namespace Lexonegit.UnityTwitchChat
         {
             // Connect to Twitch IRC
             client = new TcpClient(ircAddress, port);
-            stream = client.GetStream();
 
             if (!client.Connected)
             {
@@ -164,30 +164,31 @@ namespace Lexonegit.UnityTwitchChat
                 return;
             }
 
-            stream.WriteLine("PASS oauth:" + twitchDetails.oauth.ToLower());
-            stream.WriteLine("NICK " + twitchDetails.nick.ToLower());
-            stream.WriteLine("CAP REQ :twitch.tv/tags twitch.tv/commands");
-
             connected = true;
 
             // Clear the task queue (NOTE: ConcurrentQueue does not contain a Clear method in .NET Standard 2.0)
             while (!taskQueue.IsEmpty)
-                taskQueue.TryDequeue(out var discard);
+                taskQueue.TryDequeue(out _);
 
             // Clear the output queue
             while (!outputQueue.IsEmpty)
-                outputQueue.TryDequeue(out var discard);
+                outputQueue.TryDequeue(out _);
 
             // Initialize threads
-            inputThread = new Thread(() => IRCInputProc(client.Client, 128));
+            inputThread = new Thread(() => IRCInputProc());
             outputThread = new Thread(() => IRCOutputProc());
 
             // Start threads
             inputThread.Start();
             outputThread.Start();
+
+            // Queue login commands
+            SendCommand("PASS oauth:" + twitchDetails.oauth.ToLower(), true);
+            SendCommand("NICK " + twitchDetails.nick.ToLower(), true);
+            SendCommand("CAP REQ :twitch.tv/tags twitch.tv/commands", true);
         }
 
-        private IEnumerator Disconnect(bool reconnect = false)
+        private IEnumerator Disconnect()
         {
             if (!connected)
                 yield break;
@@ -205,9 +206,6 @@ namespace Lexonegit.UnityTwitchChat
             client.Close();
 
             Debug.LogWarning("Disconnected from Twitch IRC");
-
-            if (reconnect)
-                StartCoroutine(PrepareConnection());
         }
 
         private void BlockingDisconnect()
@@ -228,19 +226,35 @@ namespace Lexonegit.UnityTwitchChat
             Debug.LogWarning("Disconnected from Twitch IRC");
         }
 
+        private bool CheckSocketConnection(Socket socket)
+        {
+            var poll = socket.Poll(1000, SelectMode.SelectRead);
+            var avail = (socket.Available == 0);
+            if ((poll && avail) || !socket.Connected)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         private byte[] inputBuffer;
         private char[] chars;
 
         private StringBuilder currentString = new StringBuilder();
         private Decoder decoder = Encoding.UTF8.GetDecoder();
 
-        private void IRCInputProc(Socket socket, int bufferSize)
+        private void IRCInputProc()
         {
             Debug.Log("IRCInput Thread (Receive) started");
 
+            // get the Socket from the TcpClient
+            Socket socket = client.Client;
             currentString.Clear();
-            inputBuffer = new byte[bufferSize];
-            chars = new char[bufferSize];
+            inputBuffer = new byte[readBufferSize];
+            chars = new char[readBufferSize];
 
             while (connected)
             {
@@ -277,6 +291,20 @@ namespace Lexonegit.UnityTwitchChat
 
                 // sleep for a short period
                 Thread.Sleep(readInterval);
+
+
+                /* TODO
+                 * Unclear why this is necessary. Sometimes, right after a new TcpClient is created, the socket says
+                 * it has been shutdown. This catches that case and reconnects.
+                */
+
+                // Reconnect if the socket is disconnected
+                if (!CheckSocketConnection(client.Client))
+                {
+                    Debug.LogWarning("Socket is unexpectedly disconnected. Reconnecting...");
+                    taskQueue.Enqueue(() => IRC_Connect());
+                    break;
+                }
             }
 
             Debug.LogWarning("IRCInput Thread (Receive) exited");
@@ -332,21 +360,20 @@ namespace Lexonegit.UnityTwitchChat
         {
             Debug.Log("IRCOutput Thread (Send) started");
 
+            var stream = client.GetStream();
+
             //Read loop
             while (connected)
             {
                 int sleepTime = writeInterval;
 
-                if (priorityOutputQueue.Count > 0)
+                if (!priorityOutputQueue.IsEmpty)
                 {
-                    // Send next output from priorityOutputQueue
-                    if (priorityOutputQueue.TryDequeue(out var output))
-                    {
+                    // Send all outputs from priorityOutputQueue
+                    while (priorityOutputQueue.TryDequeue(out var output))
                         stream.WriteLine(output, settings.debugIRC);
-                        sleepTime = twitchRateLimitSleepTime;
-                    }
                 }
-                else if (outputQueue.Count > 0)
+                else if (!outputQueue.IsEmpty)
                 {
                     // Send next output from outputQueue
                     if (outputQueue.TryDequeue(out var output))
@@ -368,7 +395,7 @@ namespace Lexonegit.UnityTwitchChat
             switch (type)
             {
                 case "001":
-                    SendCommand("JOIN #" + twitchDetails.channel.ToLower());
+                    SendCommand("JOIN #" + twitchDetails.channel.ToLower(), true);
                     ConnectionStateAlert(StatusType.Success, "Connected to Twitch IRC. Now joining channel: " + twitchDetails.channel + "...", 100);
                     break;
                 case "353":

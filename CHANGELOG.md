@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Added
+- TwitchIRC.CheckSocketConnection
+- Quick fix for Socket being DOA when a new TcpClient is instantiated (see TwitchIRC.IRCOutputProc). Unclear why this is necessary. There should probably be a better way to handle this when (A) an old TcpClient is closed or (B) a new TcpClient is created.
+### Changed
+- Login messages are sent using the output thread instead of the main thread
+- TwitchIRC.priorityOutputQueue now sends all prioritized messages without delay for faster login time, etc. This creates a potential issue with rate limiting which should be addressed in a future update.
+- TwitchIRC.readBuffer is now a public variable
+- Fixed incorrect thread variables in TwitchIRC.PrepareConnection
+- TwitchIRC.IRCInputProc no longer takes any arguments
+- TwitchIRC.Disconnect no longer takes any arguments (IRC_Connect works as a "reconnect" method)
+
 ## [0.2.1] - 2021-10-28
 ### Added
 - TwitchIRC.SendPing method (ContextMenu action) for debugging connection
