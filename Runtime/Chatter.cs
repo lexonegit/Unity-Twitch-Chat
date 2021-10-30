@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
 
     [System.Serializable]

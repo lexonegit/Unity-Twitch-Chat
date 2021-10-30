@@ -1,10 +1,8 @@
-# Unity-Twitch-Chat
+# Twitch IRC for Unity
 
-This is a lightweight [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.
+This is a lightweight [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) chat client for Unity.
 
-Unity Twitch Chat allows you to integrate Twitch Chat with your Unity projects.
-
-This solution uses multithreading to send/receive messages to/from Twitch using IRC. Received messages are queued into the main thread and propagated through the client's ChatMessageEvent.
+Twitch IRC for Unity allows you to integrate Twitch chat with your Unity projects. This solution uses multithreading to send/receive messages to/from Twitch using IRC. Received messages are queued into the main thread and sent to listeners via a ChatMessageEvent.
 
 **Note:** Only normal chat messages are currently supported. Whispers, subscriber messages, etc are not implemented. WebGL is not supported.
 
@@ -12,18 +10,21 @@ This solution uses multithreading to send/receive messages to/from Twitch using 
 
 <img src="https://i.imgur.com/KIA8KcZ.png">
 
+## Installation
+
+Twitch IRC for Unity can be installed via the package manager. You can install the package directly from its GitHub URL, or from your local disk by downloading the package.
+
 ## Requirements
 1. Twitch Account
 2. Twitch OAuth token (You can generate one at https://twitchapps.com/tmi/)
 
-## Instructions
+## Getting Started
 
-**I recommend looking at the included ExampleProject for a better understanding**
+1. Create a new empty GameObject and add the **TwitchIRC** component
+2. In the inspector, enter your Twitch login information (OAuth, nick, channel)
+3. Make sure that "Connect on Start" is checked in the inspector and hit Play– you should see a successful **JOIN** message in your Unity Console!
 
-1. Create a new empty GameObject and add **TwitchIRC.cs** to it
-3. Enter your Twitch details (OAuth, nick, channel) inside the inspector
-4. Create a new empty GameObject and a new C# script with a reference to the **TwitchIRC.cs** component
-5. In your new C# script, add a listener to **TwitchIRC.ChatMessageEvent**
+To start handling chat messages, add a listener to **TwitchIRC.ChatMessageEvent**. The listener will receive a **Chatter** object, which contains informaton about the chat message such as the message itself and the username of the sender.
 
 ## API
 
@@ -38,9 +39,3 @@ This solution uses multithreading to send/receive messages to/from Twitch using 
 - **Chatter.IsDisplayNameFontSafe()** -> Returns true if chatter's displayName is "font safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
 - **Chatter.MessageContainsEmote(string id)** -> Returns true if chat message contains a specific emote (id)
 - **Chatter.HasBadge(string name)** -> Returns true if chatter has a specific badge
-
-## Projects made with Unity Twitch Chat
-Rocket Chat, live stream MMO minigame https://joshgrrro.com/rocketchat
-Intro Fighters, stream overlay game https://lexone.itch.io/introfighters
-
-*Did you create something? Contact the contributors to get featured here.*

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
 
     [System.Serializable]

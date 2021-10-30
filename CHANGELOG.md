@@ -4,51 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.1] - 2021-10-28
-### Changed
-- TwitchIRC now checks the socket connection on a third, separate thread.
-
-## [1.0.0] - 2021-10-28
+## Unreleased - 2021-10-29
 ### Added
-- Receive thread sends a ConnectionStateAlert error on "NOTICE * :Login authentication failed"
+- TwitchIRC catches a failed authentication attempt
+- TwitchIRC checks its connection to the IRC socket on a third thread.
+- TwitchIRC.SendPing method (ContextMenu action) for debugging connection
+- TwitchIRC.BlockingDisconnect which blocks the main thread while any remainig send/receive threads close (important for closing connecting during OnDisable and OnDestroy)
+- TwitchIRC.taskQueue which replaces the functionality of the MainThread class
+- XML descriptions for almost all class members
 ### Changed
 - API Changes
     - TwitchIRC.IRC_Connect -> TwitchIRC.Connect
     - TwitchIRC.IRC_Disconnect -> TwitchIRC.Disconnect
-    - TwitchIRC.newChatMessageEvent (UnityEvent&lt;Chatter>) -> ChatMessageEvent (event delegate(Chatter))
-    - TwitchIRC.statusEvent (UnityEvent&lt;StatusType, string, int>) -> StatusUpdateEvent (event delegate(StatusType, string, int))
-
-## [0.2.2] - 2021-10-28
-### Added
-- TwitchIRC.CheckSocketConnection
-- Quick fix for Socket being DOA when a new TcpClient is instantiated (see TwitchIRC.IRCOutputProc). Unclear why this is necessary. There should probably be a better way to handle this when (A) an old TcpClient is closed or (B) a new TcpClient is created.
-### Changed
-- Login messages are sent using the output thread instead of the main thread
-- TwitchIRC.priorityOutputQueue now sends all prioritized messages without delay for faster login time, etc. This creates a potential issue with rate limiting which should be addressed in a future update.
-- TwitchIRC.readBuffer is now a public variable
-- Fixed incorrect thread variables in TwitchIRC.PrepareConnection
-- TwitchIRC.IRCInputProc no longer takes any arguments
-- TwitchIRC.Disconnect no longer takes any arguments (IRC_Connect works as a "reconnect" method)
-
-## [0.2.1] - 2021-10-28
-### Added
-- TwitchIRC.SendPing method (ContextMenu action) for debugging connection
-- TwitchIRC.priorityOutputQueue for important messages which should be sent first
-- TwitchIRC.taskQueue, a ConcurrentQueue&lt;System.Action> which lives on the main thread (replaces functionality of the MainThread class)
-- TwitchIRC.BlockingDisconnect which blocks the main thread while any remainig send/receive threads close (important for closing connecting during OnDisable and OnDestroy)
-- XML descriptions to several class members
-### Changed
-- Versioning in CHANGELOG to reflect that the API may still be unstable
-- TwitchIRC.Disconnect is now a coroutine which yields for each thread to terminate before closing the TCPClient
-- TwitchIRC.PrepareConnection now checks for a current connected status and yields for a disconnect. This prevents accidentally establishing multiple connections on a single TwitchIRC instance and has the added benefit of allowing TwitchIRC.IRC_Connect to also act as a "reconnect" method.
-- TwitchIRC.connected is now a property which implements Interlocked.Exchange for thread safety
-- TwitchIRC.outputQueue is now a ConcurrentQueue (thread safe)
-- TwitchIRC.SendCommand no longer sends any messages instantly but uses priorityOutputQueue to send important messages first
-- TwitchIRC.IRCInputProc
-    - Now uses Socket.Available to check for new data
-    - Retreives data using Socket.Receive
-    - Received data is run through a UTF8 Decoder, then a StringBuilder
-- Send/receive threads now sleep for a configurable number of milliseconds before reattempting sends/receives to reduce CPU usage
+    - TwitchIRC.newChatMessageEvent -> TwitchIRC.ChatMessageEvent
+    - TwitchIRC.statusEvent -> TwitchIRC.StatusUpdateEvent
+- TwitchIRC class
+    - Login messages are sent using the output thread instead of the main thread
+    - When disconnecting, waits for threads to terminate before disconnect is completed
+    - When connecting, disconnects any existing connection before proceding with a new connection
+    - SendCommand no longer sends any messages instantly but uses priorityOutputQueue to send important messages first
+    - IRCInputProc decodes buffered data from the socket instead of locking on StreamReader.ReadLine
+    - Send/receive threads now sleep for a configurable number of milliseconds before reattempting sends/receives to reduce CPU usage
+    - Uses thread safe classes for connected, outputQueue, priorityOutputQueue, and taskQueue
+- Versioning in CHANGELOG to reflect that the API is not stable
 ### Removed
 - MainThread class and prefab (functionality has been intergrated into TwitchIRC class)
 

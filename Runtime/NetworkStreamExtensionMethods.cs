@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
 
     public static class NetworkStreamExtensionMethods

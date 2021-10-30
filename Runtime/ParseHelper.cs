@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using System.Net.Sockets;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
 
     public static class ParseHelper

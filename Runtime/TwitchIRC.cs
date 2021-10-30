@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Threading;
 using UnityEngine;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
     /// <summary>
     /// A class which represents a connection to the Twitch IRC API.

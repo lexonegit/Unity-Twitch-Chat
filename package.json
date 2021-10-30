@@ -1,6 +1,6 @@
 {
-  "name": "com.lexonegit.twitch-irc",
-  "version": "1.0.1",
+  "name": "com.incredulous.twitch",
+  "version": "1.0.0-alpha.1",
   "displayName": "Twitch IRC for Unity",
   "description": "A lightweight Twitch.tv IRC client for Unity."
 }

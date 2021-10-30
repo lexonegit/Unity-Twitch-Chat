@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using UnityEngine;
 
-namespace Lexonegit.UnityTwitchChat
+namespace Incredulous.Twitch
 {
 
     public partial class TwitchIRC
