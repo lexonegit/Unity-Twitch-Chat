@@ -9,8 +9,6 @@ namespace Incredulous.Twitch
     /// </summary>
     public partial class TwitchIRC : MonoBehaviour
     {
-        #region Inspector Values
-
         [Header("Server Information")]
 
         /// <summary>
@@ -63,48 +61,28 @@ namespace Incredulous.Twitch
         public bool debugIRC = true;
 
 
-        [Header("Client Information")]
-
-        public IRCUserstate clientUserstate;
-        public IRCTags clientTags;
-
-        #endregion
-
-        #region Events
+        /// <summary>
+        /// The client user's Twitch tags.
+        /// </summary>
+        public IRCTags clientUserTags { get; private set; }
 
         /// <summary>
-        /// A delegate which handles a new chat message from the server.
+        /// The current connection status.
         /// </summary>
-        public delegate void ChatMessageEventHandler(Chatter chatter);
+        public ConnectionStatus status => connection?.status ?? ConnectionStatus.Disconnected;
 
-        /// <summary>
-        /// A delegate which handles a status update from the Twitch IRC client.
-        /// </summary>
-        public delegate void ConnectionAlertEventHandler(ConnectionAlert connectionAlert);
-
-        /// <summary>
-        /// An event which is triggered when a new chat message is received.
-        /// </summary>
-        public event ChatMessageEventHandler ChatMessageEvent;
-
-        /// <summary>
-        /// An event which is triggered when the connection status changes.
-        /// </summary>
-        public event ConnectionAlertEventHandler ConnectionAlertEvent;
-
-        #endregion
 
         /// <summary>
         /// The current Twitch connection.
         /// </summary>
-        TwitchConnection connection;
+        private TwitchConnection connection;
 
         /// <summary>
         /// A queue for connection alerts.
         /// </summary>
-        Queue<ConnectionAlert> alertQueue = new Queue<ConnectionAlert>();
+        private Queue<ConnectionAlert> alertQueue = new Queue<ConnectionAlert>();
 
-        #region Unity MonoBehaviour functions
+        #region Unity MonoBehaviour Messages
 
         private void Start()
         {
@@ -134,6 +112,9 @@ namespace Incredulous.Twitch
                 var alert = alertQueue.Dequeue();
                 HandleConnectionAlert(alert);
             }
+
+            if (clientUserTags != connection.clientUserTags)
+                clientUserTags = connection.clientUserTags;
         }
 
         private void OnDestroy()
@@ -145,6 +126,30 @@ namespace Incredulous.Twitch
         {
             BlockingDisconnect(connection);
         }
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// A delegate which handles a new chat message from the server.
+        /// </summary>
+        public delegate void ChatMessageEventHandler(Chatter chatter);
+
+        /// <summary>
+        /// A delegate which handles a status update from the Twitch IRC client.
+        /// </summary>
+        public delegate void ConnectionAlertEventHandler(ConnectionAlert connectionAlert);
+
+        /// <summary>
+        /// An event which is triggered when a new chat message is received.
+        /// </summary>
+        public event ChatMessageEventHandler ChatMessageEvent;
+
+        /// <summary>
+        /// An event which is triggered when the connection status changes.
+        /// </summary>
+        public event ConnectionAlertEventHandler ConnectionAlertEvent;
 
         #endregion
 

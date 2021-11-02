@@ -35,26 +35,4 @@ namespace Incredulous.Twitch
         public List<ChatterEmote> emotes = new List<ChatterEmote>();
     }
 
-    public class IRCPrivmsg
-    {
-        public IRCPrivmsg(string Login, string Channel, string Message)
-        {
-            login = Login;
-            channel = Channel;
-            message = Message;
-        }
-
-        public string login, channel, message;
-    }
-
-    public class IRCUserstate
-    {
-        public IRCUserstate(string Channel)
-        {
-            channel = Channel;
-        }
-
-        public string channel;
-    }
-
 }

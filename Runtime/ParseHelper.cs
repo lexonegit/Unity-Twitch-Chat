@@ -4,7 +4,7 @@ using System.Net.Sockets;
 namespace Incredulous.Twitch
 {
 
-    public static class ParseHelper
+    internal static class ParseHelper
     {
 
         public static int IndexOfNth(this string source, char val, int nth = 0)

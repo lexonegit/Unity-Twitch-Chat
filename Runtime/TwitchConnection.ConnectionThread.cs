@@ -25,6 +25,7 @@ namespace Incredulous.Twitch
                 // Alert if the socket is disconnected
                 if (!CheckSocketConnection(socket))
                 {
+                    status = ConnectionStatus.Error;
                     connectionAlertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
                     break;
                 }

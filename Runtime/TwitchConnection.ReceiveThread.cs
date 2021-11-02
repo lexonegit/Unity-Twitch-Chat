@@ -117,7 +117,10 @@ namespace Incredulous.Twitch
         private void HandleNOTICE(string ircString, string tagString)
         {
             if (ircString.Contains(":Login authentication failed"))
+            {
+                status = ConnectionStatus.Error;
                 connectionAlertQueue.Enqueue(ConnectionAlert.BadLogin);
+            }
         }
 
         /// <summary>
@@ -132,6 +135,7 @@ namespace Incredulous.Twitch
                     SendCommand("JOIN #" + twitchCredentials.channel.ToLower(), true);
                     break;
                 case "353":
+                    status = ConnectionStatus.Connected;
                     connectionAlertQueue.Enqueue(ConnectionAlert.JoinedChannel);
                     break;
             }
@@ -143,21 +147,17 @@ namespace Incredulous.Twitch
         private void HandlePRIVMSG(string ircString, string tagString)
         {
             // Parse PRIVMSG
-            IRCPrivmsg privmsg = new IRCPrivmsg(
-                ParseHelper.ParseLoginName(ircString),
-                ParseHelper.ParseChannel(ircString),
-                ParseHelper.ParseMessage(ircString)
-            );
-
-            // Parse Tags
-            IRCTags tags = ParseHelper.ParseTags(tagString);
+            var login = ParseHelper.ParseLoginName(ircString);
+            var channel = ParseHelper.ParseChannel(ircString);
+            var message = ParseHelper.ParseMessage(ircString);
+            var tags = ParseHelper.ParseTags(tagString);
 
             // Sort emotes to match emote order with the chat message (compares emote indexes)
             if (tags.emotes.Count > 0)
                 tags.emotes.Sort((a, b) => 1 * a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
 
             // Queue chatter object
-            chatterQueue.Enqueue(new Chatter(privmsg, tags));
+            chatterQueue.Enqueue(new Chatter(login, channel, message, tags));
         }
 
         /// <summary>
@@ -165,11 +165,8 @@ namespace Incredulous.Twitch
         /// </summary>
         private void HandleUSERSTATE(string ircString, string tagString)
         {
-            // Parse USERSTATE
-            userstate = new IRCUserstate(ParseHelper.ParseChannel(ircString));
-
-            // Parse Tags
-            userTags = ParseHelper.ParseTags(tagString);
+            // Update the client user tags
+            clientUserTags = ParseHelper.ParseTags(tagString);
         }
     }
 

@@ -7,19 +7,9 @@ namespace Incredulous.Twitch
 
     internal partial class TwitchConnection
     {
-        /// <summary>
-        /// The prioritized queue for outputs to the IRC server. This queue will be fully emptied before reading from the main output queue.
-        /// </summary>
         private ConcurrentQueue<string> priorityOutputQueue = new ConcurrentQueue<string>();
-
-        /// <summary>
-        /// The main output queue for outputs to the IRC server
-        /// </summary>
         private ConcurrentQueue<string> outputQueue = new ConcurrentQueue<string>();
 
-        /// <summary>
-        /// The number of milliseconds Twitch requires between IRC writes.
-        /// </summary>
         private const int twitchRateLimitSleepTime = 1750;
 
         /// <summary>
@@ -79,10 +69,12 @@ namespace Incredulous.Twitch
         /// </summary>
         public void SendChatMessage(string message)
         {
-            if (message.Length <= 0) // Message can't be empty
+            // Message can't be empty
+            if (message.Length <= 0)
                 return;
 
-            outputQueue.Enqueue("PRIVMSG #" + twitchCredentials.channel + " :" + message); // Place message in queue
+            // Place message in queue
+            outputQueue.Enqueue("PRIVMSG #" + twitchCredentials.channel + " :" + message);
         }
     }
 
