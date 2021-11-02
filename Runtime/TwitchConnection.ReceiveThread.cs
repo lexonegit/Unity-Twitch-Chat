@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Incredulous.Twitch
 {
 
-    public partial class TwitchIRC
+    internal partial class TwitchConnection
     {
         private byte[] inputBuffer;
         private char[] chars;
@@ -16,17 +16,15 @@ namespace Incredulous.Twitch
         /// <summary>
         /// The IRC input process which will run on the receive thread.
         /// </summary>
-        private void IRCInputProc()
+        private void ReceiveProcess()
         {
-            Debug.Log("IRCInput Thread (Receive) started");
-
             // get the Socket from the TcpClient
-            Socket socket = client.Client;
+            Socket socket = tcpClient.Client;
             currentString.Clear();
             inputBuffer = new byte[readBufferSize];
             chars = new char[readBufferSize];
 
-            while (connected)
+            while (continueThreads)
             {
                 // check if new data is available
                 while (socket.Available > 0)
@@ -71,7 +69,7 @@ namespace Incredulous.Twitch
         /// </summary>
         private void HandleLine(string raw)
         {
-            if (settings.debugIRC)
+            if (debugIRC)
                 Debug.Log("<color=#005ae0><b>[IRC INPUT]</b></color> " + raw);
 
             string ircString = raw;
@@ -119,10 +117,7 @@ namespace Incredulous.Twitch
         private void HandleNOTICE(string ircString, string tagString)
         {
             if (ircString.Contains(":Login authentication failed"))
-            {
-                ConnectionStateAlert(StatusType.Error, "Invalid OAuth credentials. Could not connect to Twitch IRC. Disconnecting...", 100);
-                taskQueue.Enqueue(() => Disconnect());
-            }
+                connectionAlertQueue.Enqueue(ConnectionAlert.BadLogin);
         }
 
         /// <summary>
@@ -133,11 +128,11 @@ namespace Incredulous.Twitch
             switch (type)
             {
                 case "001":
-                    SendCommand("JOIN #" + twitchDetails.channel.ToLower(), true);
-                    ConnectionStateAlert(StatusType.Success, "Connected to Twitch IRC. Now joining channel: " + twitchDetails.channel + "...", 100);
+                    connectionAlertQueue.Enqueue(ConnectionAlert.ConnectedToServer);
+                    SendCommand("JOIN #" + twitchCredentials.channel.ToLower(), true);
                     break;
                 case "353":
-                    Debug.Log("<color=#bd2881><b>[JOIN]</b></color> Joined channel: " + twitchDetails.channel + " successfully");
+                    connectionAlertQueue.Enqueue(ConnectionAlert.JoinedChannel);
                     break;
             }
         }
@@ -155,15 +150,14 @@ namespace Incredulous.Twitch
             );
 
             // Parse Tags
-            IRCTags tags = ParseHelper.ParseTags(tagString, settings.parseBadges, settings.parseTwitchEmotes);
+            IRCTags tags = ParseHelper.ParseTags(tagString);
 
             // Sort emotes to match emote order with the chat message (compares emote indexes)
             if (tags.emotes.Count > 0)
                 tags.emotes.Sort((a, b) => 1 * a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
 
-            // Send chatter object to listeners
-            // Invoke in main thread
-            taskQueue.Enqueue(() => ChatMessageEvent?.Invoke(new Chatter(privmsg, tags)));
+            // Queue chatter object
+            chatterQueue.Enqueue(new Chatter(privmsg, tags));
         }
 
         /// <summary>
@@ -172,12 +166,10 @@ namespace Incredulous.Twitch
         private void HandleUSERSTATE(string ircString, string tagString)
         {
             // Parse USERSTATE
-            IRCUserstate userstate = new IRCUserstate(ParseHelper.ParseChannel(ircString));
+            userstate = new IRCUserstate(ParseHelper.ParseChannel(ircString));
 
             // Parse Tags
-            IRCTags tags = ParseHelper.ParseTags(tagString, settings.parseBadges, settings.parseTwitchEmotes);
-
-            clientChatter = new Chatter(userstate, tags);
+            userTags = ParseHelper.ParseTags(tagString);
         }
     }
 

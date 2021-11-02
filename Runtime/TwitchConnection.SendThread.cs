@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Incredulous.Twitch
 {
 
-    public partial class TwitchIRC
+    internal partial class TwitchConnection
     {
         /// <summary>
         /// The prioritized queue for outputs to the IRC server. This queue will be fully emptied before reading from the main output queue.
@@ -18,16 +18,19 @@ namespace Incredulous.Twitch
         private ConcurrentQueue<string> outputQueue = new ConcurrentQueue<string>();
 
         /// <summary>
+        /// The number of milliseconds Twitch requires between IRC writes.
+        /// </summary>
+        private const int twitchRateLimitSleepTime = 1750;
+
+        /// <summary>
         /// The IRC output process which will run on the send thread.
         /// </summary>
-        private void IRCOutputProc()
+        private void SendProcess()
         {
-            Debug.Log("IRCOutput Thread (Send) started");
-
-            var stream = client.GetStream();
+            var stream = tcpClient.GetStream();
 
             //Read loop
-            while (connected)
+            while (continueThreads)
             {
                 int sleepTime = writeInterval;
 
@@ -35,14 +38,14 @@ namespace Incredulous.Twitch
                 {
                     // Send all outputs from priorityOutputQueue
                     while (priorityOutputQueue.TryDequeue(out var output))
-                        stream.WriteLine(output, settings.debugIRC);
+                        stream.WriteLine(output, debugIRC);
                 }
                 else if (!outputQueue.IsEmpty)
                 {
                     // Send next output from outputQueue
                     if (outputQueue.TryDequeue(out var output))
                     {
-                        stream.WriteLine(output, settings.debugIRC);
+                        stream.WriteLine(output, debugIRC);
                         sleepTime = twitchRateLimitSleepTime;
                     }
                 }
@@ -52,6 +55,34 @@ namespace Incredulous.Twitch
             }
 
             Debug.LogWarning("IRCOutput Thread (Send) exited");
+        }
+
+        /// <summary>
+        /// Sends a ping to the server.
+        /// </summary>
+        public void Ping() => SendCommand("PING :tmi.twitch.tv", true);
+
+        /// <summary>
+        /// Queues a command to be sent to the IRC server. All prioritzed commands will be sent before non-prioritized commands.
+        /// </summary>
+        public void SendCommand(string command, bool prioritized = false)
+        {
+            // Place command in respective queue
+            if (prioritized)
+                priorityOutputQueue.Enqueue(command);
+            else
+                outputQueue.Enqueue(command);
+        }
+
+        /// <summary>
+        /// Sends a chat message.
+        /// </summary>
+        public void SendChatMessage(string message)
+        {
+            if (message.Length <= 0) // Message can't be empty
+                return;
+
+            outputQueue.Enqueue("PRIVMSG #" + twitchCredentials.channel + " :" + message); // Place message in queue
         }
     }
 
