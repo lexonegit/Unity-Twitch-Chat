@@ -58,7 +58,7 @@ namespace Incredulous.Twitch
         /// <summary>
         /// Whether all IRC messages should be logged to the debug console.
         /// </summary>
-        public bool debugIRC = true;
+        public bool debugIRC = false;
 
 
         /// <summary>

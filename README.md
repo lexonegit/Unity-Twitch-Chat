@@ -33,6 +33,8 @@ To start handling chat messages, add a listener to **TwitchIRC.ChatMessageEvent*
 - **TwitchIRC.Disconnect()** -> Disconnects from Twitch IRC
 - **TwitchIRC.SendChatMessage(string)** -> Sends a Twitch chat message
 - **TwitchIRC.ChatMessageEvent** -> Passes Twitch chat messages to listeners
+- **TwitchIRC.status** -> The current connection status of the Twitch IRC client
+- **TwitchIRC.clientUserTags** -> The tags (badges, name color, etc.) of the logged in user
 
 #### Chatter.cs
 - **Chatter.GetRGBAColor()** -> Returns chatter's name color in RGBA format
