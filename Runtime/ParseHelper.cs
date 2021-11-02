@@ -4,7 +4,7 @@ using System.Net.Sockets;
 namespace Incredulous.Twitch
 {
 
-    public static class ParseHelper
+    internal static class ParseHelper
     {
 
         public static int IndexOfNth(this string source, char val, int nth = 0)
@@ -34,7 +34,7 @@ namespace Incredulous.Twitch
             return symbolRegex.IsMatch(displayName);
         }
 
-        public static IRCTags ParseTags(string tagString, bool parseBadges, bool parseTwitchEmotes)
+        public static IRCTags ParseTags(string tagString)
         {
             IRCTags tags = new IRCTags();
             string[] split = tagString.Split(';');
@@ -51,8 +51,7 @@ namespace Incredulous.Twitch
                 switch (split[i].Substring(0, split[i].IndexOf('=')))
                 {
                     case "badges":
-                        if (parseBadges)
-                            tags.badges = ParseBadges(value.Split(','));
+                        tags.badges = ParseBadges(value.Split(','));
                         continue;
 
                     case "color":
@@ -64,8 +63,7 @@ namespace Incredulous.Twitch
                         continue;
 
                     case "emotes":
-                        if (parseTwitchEmotes)
-                            tags.emotes.AddRange(ParseTwitchEmotes(value.Split('/')));
+                        tags.emotes.AddRange(ParseTwitchEmotes(value.Split('/')));
                         continue;
 
                     case "room-id": // room-id = channelId

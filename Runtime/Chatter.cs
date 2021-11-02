@@ -6,6 +6,14 @@ namespace Incredulous.Twitch
     [System.Serializable]
     public class Chatter
     {
+        public Chatter(string login, string channel, string message, IRCTags tags)
+        {
+            this.login = login;
+            this.channel = channel;
+            this.message = message;
+            this.tags = tags;
+        }
+
         public string login, channel, message;
         public IRCTags tags = null;
 
@@ -50,22 +58,6 @@ namespace Incredulous.Twitch
 
             return false;
         }
-
-        #region Constructors
-        public Chatter(IRCPrivmsg Privmsg, IRCTags Tags)
-        {
-            login = Privmsg.login;
-            channel = Privmsg.channel;
-            message = Privmsg.message;
-            tags = Tags;
-        }
-
-        public Chatter(IRCUserstate Userstate, IRCTags Tags)
-        {
-            channel = Userstate.channel;
-            tags = Tags;
-        }
-        #endregion
     }
 
 }

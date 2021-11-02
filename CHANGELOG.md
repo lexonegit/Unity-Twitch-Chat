@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - TwitchIRC.newChatMessageEvent -> TwitchIRC.ChatMessageEvent
     - TwitchIRC.statusEvent -> TwitchIRC.StatusUpdateEvent
 - TwitchIRC class
+    - Each connection is encapsulated in an internal TwitchConnection object
     - Login messages are sent using the output thread instead of the main thread
     - When disconnecting, waits for threads to terminate before disconnect is completed
     - When connecting, disconnects any existing connection before proceding with a new connection
@@ -26,9 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - IRCInputProc decodes buffered data from the socket instead of locking on StreamReader.ReadLine
     - Send/receive threads now sleep for a configurable number of milliseconds before reattempting sends/receives to reduce CPU usage
     - Uses thread safe classes for connected, outputQueue, priorityOutputQueue, and taskQueue
-- Versioning in CHANGELOG to reflect that the API is not stable
+- Versioning in CHANGELOG to reflect that the API was not stable
 ### Removed
 - MainThread class and prefab (functionality has been intergrated into TwitchIRC class)
+- IRCPrivMsg class and IRCUserstate class which were mostly unused
 
 ## [0.2.0] - 2021-10-26
 ### Added
