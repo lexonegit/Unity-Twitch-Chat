@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Net.Sockets;
+using UnityEngine;
 
 namespace Incredulous.Twitch
 {
@@ -25,8 +26,8 @@ namespace Incredulous.Twitch
                 // Alert if the socket is disconnected
                 if (!CheckSocketConnection(socket))
                 {
-                    status = ConnectionStatus.Error;
-                    connectionAlertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
+                    isConnnected = false;
+                    alertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
                     break;
                 }
                 else
@@ -34,6 +35,8 @@ namespace Incredulous.Twitch
                     Thread.Sleep(connectionCheckInterval);
                 }
             }
+
+            Debug.LogWarning("Exited check connection thread.");
         }
 
         /// <summary>

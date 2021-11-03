@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+### Added
+- TwitchIRC.IsConnected, which is true only while there is a stable connection to Twitch
+### Changed
+- Fixed issue where TwitchIRC did not end a failed connection.
+### Removed
+- TwitchIRC.status, which overcomplicated checking the connection for basic cases (For more complex connection handling, listen to the ConnectionAlertEvent)
+
 ## [1.0.0] - 2021-11-02
 ### Added
 - TwitchIRC catches a failed authentication attempt

@@ -118,8 +118,8 @@ namespace Incredulous.Twitch
         {
             if (ircString.Contains(":Login authentication failed"))
             {
-                status = ConnectionStatus.Error;
-                connectionAlertQueue.Enqueue(ConnectionAlert.BadLogin);
+                isConnnected = false;
+                alertQueue.Enqueue(ConnectionAlert.BadLogin);
             }
         }
 
@@ -131,12 +131,12 @@ namespace Incredulous.Twitch
             switch (type)
             {
                 case "001":
-                    connectionAlertQueue.Enqueue(ConnectionAlert.ConnectedToServer);
+                    alertQueue.Enqueue(ConnectionAlert.ConnectedToServer);
                     SendCommand("JOIN #" + twitchCredentials.channel.ToLower(), true);
                     break;
                 case "353":
-                    status = ConnectionStatus.Connected;
-                    connectionAlertQueue.Enqueue(ConnectionAlert.JoinedChannel);
+                    isConnnected = true;
+                    alertQueue.Enqueue(ConnectionAlert.JoinedChannel);
                     break;
             }
         }

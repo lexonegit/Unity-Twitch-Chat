@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 
 namespace Incredulous.Twitch
@@ -67,9 +68,15 @@ namespace Incredulous.Twitch
         public IRCTags clientUserTags { get; private set; }
 
         /// <summary>
-        /// The current connection status.
+        /// Whether the Twitch client is successfully connected to Twitch.
         /// </summary>
-        public ConnectionStatus status => connection?.status ?? ConnectionStatus.Disconnected;
+        public bool IsConnected => connection?.isConnnected ?? false;
+
+
+        /// <summary>
+        /// A queue for connection alerts.
+        /// </summary>
+        internal readonly ConcurrentQueue<ConnectionAlert> alertQueue = new ConcurrentQueue<ConnectionAlert>();
 
 
         /// <summary>
@@ -77,17 +84,13 @@ namespace Incredulous.Twitch
         /// </summary>
         private TwitchConnection connection;
 
-        /// <summary>
-        /// A queue for connection alerts.
-        /// </summary>
-        private Queue<ConnectionAlert> alertQueue = new Queue<ConnectionAlert>();
 
         #region Unity MonoBehaviour Messages
 
         private void Start()
         {
             if (connectOnStart)
-                StartCoroutine(ConnectCoroutine());
+                Connect();
         }
 
         private void Update()
@@ -101,16 +104,10 @@ namespace Incredulous.Twitch
                     ChatMessageEvent?.Invoke(chatter);
             }
 
-            while (!connection.connectionAlertQueue.IsEmpty)
+            while (!alertQueue.IsEmpty)
             {
-                if (connection.connectionAlertQueue.TryDequeue(out var alert))
+                if (alertQueue.TryDequeue(out var alert))
                     HandleConnectionAlert(alert);
-            }
-
-            while (alertQueue.Count > 0)
-            {
-                var alert = alertQueue.Dequeue();
-                HandleConnectionAlert(alert);
             }
 
             if (clientUserTags != connection.clientUserTags)
@@ -159,31 +156,15 @@ namespace Incredulous.Twitch
         [ContextMenu("Connect IRC")]
         public void Connect()
         {
-            StartCoroutine(ConnectCoroutine());
-        }
-
-        /// <summary>
-        /// Disconnect from Twitch IRC.
-        /// </summary>
-        [ContextMenu("Disconnect IRC")]
-        public void Disconnect()
-        {
-            StartCoroutine(DisconnectCoroutine(connection));
-        }
-
-        /// <summary>
-        /// A coroutine which builds the connection to the Twitch IRC server and starts the send/receive threads.
-        /// </summary>
-        private IEnumerator ConnectCoroutine()
-        {
             // End any current connection
-            StartCoroutine(DisconnectCoroutine(connection));
+            if (connection != null)
+                Disconnect();
 
             // Verify that login information has been provided
             if (twitchCredentials.oauth.Length <= 0 || twitchCredentials.username.Length <= 0 || twitchCredentials.channel.Length <= 0)
             {
-                ConnectionAlertEvent?.Invoke(ConnectionAlert.MissingLogin);
-                yield break;
+                alertQueue.Enqueue(ConnectionAlert.MissingLogin);
+                return;
             }
 
             // Fix formatting (twitchapps.com)
@@ -196,12 +177,21 @@ namespace Incredulous.Twitch
             // Check the connection
             if (!connection.tcpClient.Connected)
             {
-                ConnectionAlertEvent?.Invoke(ConnectionAlert.NoConnection);
-                yield break;
+                alertQueue.Enqueue(ConnectionAlert.NoConnection);
+                return;
             }
 
             // Begin the threads and attempt to authenticate
             connection.Begin();
+        }
+
+        /// <summary>
+        /// Disconnect from Twitch IRC.
+        /// </summary>
+        [ContextMenu("Disconnect IRC")]
+        public void Disconnect()
+        {
+            StartCoroutine(DisconnectCoroutine(connection));
         }
 
         /// <summary>
@@ -212,20 +202,10 @@ namespace Incredulous.Twitch
             if (connection == null)
                 yield break;
 
-            if (connection.status == ConnectionStatus.Disconnected || connection.status == ConnectionStatus.DisconnectionPending)
-                yield break;
+            // Close the connection
+            yield return StartCoroutine(connection.End());
 
-            // Stop the connection
-            connection.End();
-
-            // Wait for threads to close
-            while (connection.threadsActive)
-                yield return null;
-
-            // Close the TcpClient
-            connection.Close();
-
-            // Reset connection
+            // Reset connection variable
             if (this.connection == connection)
                 this.connection = null;
 
@@ -238,9 +218,6 @@ namespace Incredulous.Twitch
         private void BlockingDisconnect(TwitchConnection connection)
         {
             if (connection == null)
-                return;
-
-            if (connection.status == ConnectionStatus.Disconnected || connection.status == ConnectionStatus.DisconnectionPending)
                 return;
 
             // End the connection
@@ -258,19 +235,26 @@ namespace Incredulous.Twitch
         /// </summary>
         private void HandleConnectionAlert(ConnectionAlert alert)
         {
-            ConnectionAlertEvent?.Invoke(alert);
-            if (alert.isError)
+            switch (alert.status)
             {
-                Debug.LogError(alert.message);
-            }
-            else
-            {
-                Debug.Log(alert.message);
-            }
+                case ConnectionAlert.BAD_LOGIN:
+                case ConnectionAlert.MISSING_LOGIN:
+                case ConnectionAlert.NO_CONNECTION:
+                    Debug.LogError(alert.message);
+                    Disconnect();
+                    break;
 
-            // Reconnect if connection is interrupted
-            if (alert.status == ConnectionAlert.CONNECTION_INTERRUPTED)
-                Connect();
+                case ConnectionAlert.CONNECTION_INTERRUPTED:
+                    Debug.LogError(alert.message);
+                    Connect();
+                    break;
+
+                case ConnectionAlert.CONNECTED_TO_SERVER:
+                case ConnectionAlert.JOINED_CHANNEL:
+                    Debug.Log(alert.message);
+                    break;
+            }
+            ConnectionAlertEvent?.Invoke(alert);
         }
     }
 
