@@ -21,6 +21,7 @@ namespace Incredulous.Twitch
             alertQueue = twitchIRC.alertQueue;
 
             debugIRC = twitchIRC.debugIRC;
+            debugThreads = twitchIRC.debugThreads;
         }
 
         /// <summary>
@@ -58,6 +59,7 @@ namespace Incredulous.Twitch
         private readonly int readInterval;
         private readonly int writeInterval;
         private readonly bool debugIRC;
+        private readonly bool debugThreads;
 
         /// <summary>
         /// A reference to the TwitchIRC manager's alert queue.

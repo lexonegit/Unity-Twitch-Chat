@@ -44,7 +44,8 @@ namespace Incredulous.Twitch
                 Thread.Sleep(sleepTime);
             }
 
-            Debug.LogWarning("IRCOutput Thread (Send) exited");
+            if (debugThreads)
+                Debug.LogWarning("Exited send thread.");
         }
 
         /// <summary>

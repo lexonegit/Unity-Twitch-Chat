@@ -61,7 +61,8 @@ namespace Incredulous.Twitch
                 Thread.Sleep(readInterval);
             }
 
-            Debug.LogWarning("IRCInput Thread (Receive) exited");
+            if (debugThreads)
+                Debug.LogWarning("Exited receive thread.");
         }
 
         /// <summary>

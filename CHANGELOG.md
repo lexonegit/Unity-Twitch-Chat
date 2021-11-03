@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - TwitchIRC.IsConnected, which is true only while there is a stable connection to Twitch
+- TwitchIRC.debugThreads, which allows debug warnings for thread termination to be turned on/off
 ### Changed
 - Fixed issue where TwitchIRC did not end a failed connection.
 ### Removed

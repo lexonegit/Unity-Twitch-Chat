@@ -36,7 +36,8 @@ namespace Incredulous.Twitch
                 }
             }
 
-            Debug.LogWarning("Exited check connection thread.");
+            if (debugThreads)
+                Debug.LogWarning("Exited check connection thread.");
         }
 
         /// <summary>

@@ -61,6 +61,11 @@ namespace Incredulous.Twitch
         /// </summary>
         public bool debugIRC = false;
 
+        /// <summary>
+        /// Whether thread warning messages should be logged to the debug console.
+        /// </summary>
+        public bool debugThreads = false;
+
 
         /// <summary>
         /// The client user's Twitch tags.
