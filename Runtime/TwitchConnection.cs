@@ -19,6 +19,7 @@ namespace Incredulous.Twitch
             writeInterval = twitchIRC.writeInterval;
 
             alertQueue = twitchIRC.alertQueue;
+            chatterQueue = twitchIRC.chatterQueue;
 
             debugIRC = twitchIRC.debugIRC;
             debugThreads = twitchIRC.debugThreads;
@@ -28,11 +29,6 @@ namespace Incredulous.Twitch
         /// The TCP Client instance for this connection.
         /// </summary>
         public TcpClient tcpClient { get; private set; }
-
-        /// <summary>
-        /// The queue of received messages from Twitch.
-        /// </summary>
-        public ConcurrentQueue<Chatter> chatterQueue { get; private set; } = new ConcurrentQueue<Chatter>();
 
         /// <summary>
         /// The client user's Twitch tags.
@@ -54,6 +50,11 @@ namespace Incredulous.Twitch
         }
         private int _isConnected;
 
+        /// <summary>
+        /// Whether this connection has received a disconnect request.
+        /// </summary>
+        public bool pendingDisconnect;
+
         private readonly TwitchCredentials twitchCredentials;
         private readonly int readBufferSize;
         private readonly int readInterval;
@@ -64,18 +65,16 @@ namespace Incredulous.Twitch
         /// <summary>
         /// A reference to the TwitchIRC manager's alert queue.
         /// </summary>
-        private ConcurrentQueue<ConnectionAlert> alertQueue;
+        private readonly ConcurrentQueue<ConnectionAlert> alertQueue;
 
         /// <summary>
-        /// A reference to the TwitchIRC manager's task queue.
+        /// A reference to the TwitchIRC manager's chat message queue.
         /// </summary>
-        private ConcurrentQueue<System.Action> taskQueue;
+        private ConcurrentQueue<Chatter> chatterQueue;
 
         private Thread sendThread;
         private Thread receiveThread;
         private Thread connectionThread;
-
-        private bool pendingDisconnect;
 
         private bool continueThreads
         {
@@ -131,11 +130,7 @@ namespace Incredulous.Twitch
         /// </summary>
         public void BlockingEndAndClose()
         {
-            if (pendingDisconnect)
-                return;
-
             pendingDisconnect = true;
-
             isConnnected = false;
             continueThreads = false;
             receiveThread?.Join();

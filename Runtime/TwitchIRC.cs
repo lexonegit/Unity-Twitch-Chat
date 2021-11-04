@@ -46,7 +46,7 @@ namespace Incredulous.Twitch
         /// <summary>
         /// The number of milliseconds between each time the output thread checks its queues.
         /// </summary>
-        public int writeInterval = 500;
+        public int writeInterval = 100;
 
 
         [Header("Other Settings")]
@@ -83,6 +83,11 @@ namespace Incredulous.Twitch
         /// </summary>
         internal readonly ConcurrentQueue<ConnectionAlert> alertQueue = new ConcurrentQueue<ConnectionAlert>();
 
+        /// <summary>
+        /// A queue for incoming chat messages.
+        /// </summary>
+        internal readonly ConcurrentQueue<Chatter> chatterQueue = new ConcurrentQueue<Chatter>();
+
 
         /// <summary>
         /// The current Twitch connection.
@@ -100,23 +105,7 @@ namespace Incredulous.Twitch
 
         private void Update()
         {
-            if (connection == null)
-                return;
-
-            while (!connection.chatterQueue.IsEmpty)
-            {
-                if (connection.chatterQueue.TryDequeue(out var chatter))
-                    ChatMessageEvent?.Invoke(chatter);
-            }
-
-            while (!alertQueue.IsEmpty)
-            {
-                if (alertQueue.TryDequeue(out var alert))
-                    HandleConnectionAlert(alert);
-            }
-
-            if (clientUserTags != connection.clientUserTags)
-                clientUserTags = connection.clientUserTags;
+            HandlePendingInformation();
         }
 
         private void OnDestroy()
@@ -204,8 +193,11 @@ namespace Incredulous.Twitch
         /// </summary>
         private IEnumerator DisconnectCoroutine(TwitchConnection connection)
         {
-            if (connection == null)
+            if (connection == null || connection.pendingDisconnect)
                 yield break;
+
+            // Finish processing any pending information
+            HandlePendingInformation();
 
             // Close the connection
             yield return StartCoroutine(connection.End());
@@ -225,6 +217,9 @@ namespace Incredulous.Twitch
             if (connection == null)
                 return;
 
+            // Finish processing any pending information
+            HandlePendingInformation();
+
             // End the connection
             connection.BlockingEndAndClose();
 
@@ -233,6 +228,27 @@ namespace Incredulous.Twitch
                 this.connection = null;
 
             Debug.LogWarning("Disconnected from Twitch IRC");
+        }
+
+        /// <summary>
+        /// Handles pending information received from the current connection
+        /// </summary>
+        private void HandlePendingInformation()
+        {
+            while (!chatterQueue.IsEmpty)
+            {
+                if (chatterQueue.TryDequeue(out var chatter))
+                    ChatMessageEvent?.Invoke(chatter);
+            }
+
+            while (!alertQueue.IsEmpty)
+            {
+                if (alertQueue.TryDequeue(out var alert))
+                    HandleConnectionAlert(alert);
+            }
+
+            if (connection != null && clientUserTags != connection.clientUserTags)
+                clientUserTags = connection.clientUserTags;
         }
 
         /// <summary>

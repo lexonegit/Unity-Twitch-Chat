@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TwitchIRC.IsConnected, which is true only while there is a stable connection to Twitch
 - TwitchIRC.debugThreads, which allows debug warnings for thread termination to be turned on/off
 ### Changed
-- Fixed issue where TwitchIRC did not end a failed connection.
+- Fixed issue where TwitchIRC did not end a failed connection
+- On disconnect, pending status updates and chat messages are now propogated before a connection is terminated
+- Reduced default write interval to 100ms for faster responsiveness
+- Settled on a versioning method for pre-release versions
 ### Removed
-- TwitchIRC.status, which overcomplicated checking the connection for basic cases (For more complex connection handling, listen to the ConnectionAlertEvent)
+- TwitchIRC.status, which overcomplicated checking the connection for basic cases (for more complex connection handling, listen to the ConnectionAlertEvent)
 
 ## [1.0.0] - 2021-11-02
 ### Added
