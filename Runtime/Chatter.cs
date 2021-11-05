@@ -37,27 +37,15 @@ namespace Incredulous.Twitch
             return ParseHelper.CheckNameRegex(tags.displayName);
         }
 
-        public bool MessageContainsEmote(string emoteId)
-        {
-            foreach (ChatterEmote e in tags.emotes)
-            {
-                if (e.id == emoteId)
-                    return true;
-            }
+        /// <summary>
+        /// Returns whether the message contain a given emote.
+        /// </summary>
+        public bool ContainsEmote(string emote) => tags.ContainsEmote(emote);
 
-            return false;
-        }
-
-        public bool HasBadge(string badgeName)
-        {
-            foreach (ChatterBadge b in tags.badges)
-            {
-                if (b.id == badgeName)
-                    return true;
-            }
-
-            return false;
-        }
+        /// <summary>
+        /// Returns whether the message has a given badge.
+        /// </summary>
+        public bool HasBadge(string badge) => tags.HasBadge(badge);
     }
 
 }

@@ -26,6 +26,16 @@ namespace Incredulous.Twitch
 
             while (continueThreads)
             {
+                // check if the socket is still connected
+                if (!CheckSocketConnection(socket))
+                {
+                    // Sometimes, right after a new TcpClient is created, the socket says
+                    // it has been shutdown. This catches that case and reconnects.
+                    isConnnected = false;
+                    alertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
+                    break;
+                }
+
                 // check if new data is available
                 while (socket.Available > 0)
                 {
@@ -109,7 +119,7 @@ namespace Incredulous.Twitch
 
             // Respond to PING messages
             if (raw.StartsWith("PING"))
-                SendCommand("PONG :tmi.twitch.tv", true);
+                SendCommand("PONG :tmi.twitch.tv");
         }
 
         /// <summary>
@@ -167,7 +177,26 @@ namespace Incredulous.Twitch
         private void HandleUSERSTATE(string ircString, string tagString)
         {
             // Update the client user tags
-            clientUserTags = ParseHelper.ParseTags(tagString);
+            var tags = ParseHelper.ParseTags(tagString);
+            clientUserTags = tags;
+            UpdateRateLimits(tags);
+        }
+
+        /// <summary>
+        /// Checks whether the socket is still connected to the network.
+        /// </summary>
+        private bool CheckSocketConnection(Socket socket)
+        {
+            var poll = socket.Poll(1000, SelectMode.SelectRead);
+            var avail = (socket.Available == 0);
+            if ((poll && avail) || !socket.Connected)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 

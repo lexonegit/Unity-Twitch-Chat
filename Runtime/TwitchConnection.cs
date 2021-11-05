@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading;
@@ -10,7 +11,15 @@ namespace Incredulous.Twitch
     {
         public TwitchConnection(TwitchIRC twitchIRC)
         {
-            tcpClient = new TcpClient(twitchIRC.ircAddress, twitchIRC.port);
+            try
+            {
+                tcpClient = new TcpClient(twitchIRC.ircAddress, twitchIRC.port);
+            }
+            catch (Exception)
+            {
+                tcpClient = null;
+            }
+
             twitchCredentials = twitchIRC.twitchCredentials;
             clientUserTags = twitchIRC.clientUserTags;
 
@@ -20,6 +29,9 @@ namespace Incredulous.Twitch
 
             alertQueue = twitchIRC.alertQueue;
             chatterQueue = twitchIRC.chatterQueue;
+
+            chatRateLimit = twitchCredentials.username == twitchCredentials.channel ? RateLimit.ChatModerator : RateLimit.ChatRegular;
+            outputTimestamps = twitchIRC.outputTimestamps;
 
             debugIRC = twitchIRC.debugIRC;
             debugThreads = twitchIRC.debugThreads;
@@ -70,11 +82,15 @@ namespace Incredulous.Twitch
         /// <summary>
         /// A reference to the TwitchIRC manager's chat message queue.
         /// </summary>
-        private ConcurrentQueue<Chatter> chatterQueue;
+        private readonly ConcurrentQueue<Chatter> chatterQueue;
+
+        /// <summary>
+        /// A reference to the TwitchIRC manager's output timestamp queue (for rate limiting).
+        /// </summary>
+        private readonly ConcurrentQueue<DateTime> outputTimestamps;
 
         private Thread sendThread;
         private Thread receiveThread;
-        private Thread connectionThread;
 
         private bool continueThreads
         {
@@ -83,6 +99,9 @@ namespace Incredulous.Twitch
         }
         private int _continueThreads = 1;
 
+        private RateLimit chatRateLimit;
+        private object rateLimitLock = new object();
+
         /// <summary>
         /// Initalizes a connection to Twitch and starts the send, receive, and check connection threads.
         /// </summary>
@@ -90,11 +109,9 @@ namespace Incredulous.Twitch
         {
             receiveThread = new Thread(() => ReceiveProcess());
             sendThread = new Thread(() => SendProcess());
-            connectionThread = new Thread(() => CheckConnectionProcess());
 
             receiveThread.Start();
             sendThread.Start();
-            connectionThread.Start();
 
             // Queue login commands
             SendCommand("PASS oauth:" + twitchCredentials.oauth.ToLower(), true);
@@ -107,7 +124,7 @@ namespace Incredulous.Twitch
         /// </summary>
         public IEnumerator End()
         {
-            if (pendingDisconnect)
+            if (tcpClient == null || pendingDisconnect)
                 yield break;
 
             pendingDisconnect = true;
@@ -119,8 +136,6 @@ namespace Incredulous.Twitch
                 yield return null;
             while (sendThread.IsAlive)
                 yield return null;
-            while (connectionThread.IsAlive)
-                yield return null;
 
             tcpClient.Close();
         }
@@ -130,13 +145,32 @@ namespace Incredulous.Twitch
         /// </summary>
         public void BlockingEndAndClose()
         {
+            if (tcpClient == null)
+                return;
+
             pendingDisconnect = true;
             isConnnected = false;
             continueThreads = false;
             receiveThread?.Join();
             sendThread?.Join();
-            connectionThread?.Join();
             tcpClient.Close();
+        }
+
+        /// <summary>
+        /// Updates the rate limit based on the tags received from a USERSTATE message.
+        /// </summary>
+        private void UpdateRateLimits(IRCTags tags)
+        {
+            if (tags.HasBadge("broadcaster") || tags.HasBadge("moderator"))
+            {
+                lock (rateLimitLock)
+                    chatRateLimit = RateLimit.ChatModerator;
+            }
+            else
+            {
+                lock (rateLimitLock)
+                    chatRateLimit = RateLimit.ChatRegular;
+            }
         }
     }
 

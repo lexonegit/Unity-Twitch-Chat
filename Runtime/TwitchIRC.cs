@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using UnityEngine;
@@ -12,60 +13,43 @@ namespace Incredulous.Twitch
     {
         [Header("Server Information")]
 
-        /// <summary>
-        /// The server address.
-        /// </summary>
+        [Tooltip("The IRC Address of the server: irc.chat.twitch.tv")]
         public string ircAddress = "irc.chat.twitch.tv";
 
-        /// <summary>
-        /// The server port.
-        /// </summary>
+        [Tooltip("The server port which the client should connect to: 6667")]
         public int port = 6667;
 
-        /// <summary>
-        /// Twitch login details.
-        /// </summary>
+        [Tooltip("The information used to authenticate with Twitch.")]
         public TwitchCredentials twitchCredentials;
 
+        [Tooltip("Whether the client should use verified-status rate limits. NOTE: Do not set this to true if you have not been granted verified status by Twitch. Your account risks being locked or banned.")]
+        public bool verifiedBotStatus;
 
         [Header("Read Information")]
 
-        /// <summary>
-        /// The number of milliseconds between each time the input thread checks for new inputs.
-        /// </summary>
+        [Tooltip("The number of milliseconds between each time the input thread checks for new inputs.")]
         public int readInterval = 100;
 
-        /// <summary>
-        /// The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.
-        /// </summary>
+        [Tooltip("The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.")]
         public int readBufferSize = 128;
 
 
         [Header("Write Information")]
 
-        /// <summary>
-        /// The number of milliseconds between each time the output thread checks its queues.
-        /// </summary>
+        [Tooltip("The number of milliseconds between each time the output thread checks its queues.")]
         public int writeInterval = 100;
 
 
         [Header("Other Settings")]
 
-        /// <summary>
-        /// Whether a connection to Twitch should be established on Start.
-        /// </summary>
+        [Tooltip("Whether a connection to Twitch should be established on Start.")]
         public bool connectOnStart = true;
 
-        /// <summary>
-        /// Whether all IRC messages should be logged to the debug console.
-        /// </summary>
+        [Tooltip("Whether all IRC messages should be logged to the debug console.")]
         public bool debugIRC = false;
 
-        /// <summary>
-        /// Whether thread warning messages should be logged to the debug console.
-        /// </summary>
+        [Tooltip("Whether thread warning messages should be logged to the debug console.")]
         public bool debugThreads = false;
-
 
         /// <summary>
         /// The client user's Twitch tags.
@@ -88,11 +72,21 @@ namespace Incredulous.Twitch
         /// </summary>
         internal readonly ConcurrentQueue<Chatter> chatterQueue = new ConcurrentQueue<Chatter>();
 
+        /// <summary>
+        /// A queue which holds timestamps for all outputs sent to the server (for rate limiting).
+        /// </summary>
+        internal readonly ConcurrentQueue<DateTime> outputTimestamps = new ConcurrentQueue<DateTime>();
+
 
         /// <summary>
         /// The current Twitch connection.
         /// </summary>
         private TwitchConnection connection;
+
+        /// <summary>
+        /// The number of times a connection attempt has sequentially failed.
+        /// </summary>
+        private int failCount;
 
 
         #region Unity MonoBehaviour Messages
@@ -150,6 +144,20 @@ namespace Incredulous.Twitch
         [ContextMenu("Connect IRC")]
         public void Connect()
         {
+            StartCoroutine(ConnectCoroutine());
+        }
+
+        /// <summary>
+        /// Disconnect from Twitch IRC.
+        /// </summary>
+        [ContextMenu("Disconnect IRC")]
+        public void Disconnect()
+        {
+            StartCoroutine(DisconnectCoroutine(connection));
+        }
+
+        private IEnumerator ConnectCoroutine()
+        {
             // End any current connection
             if (connection != null)
                 Disconnect();
@@ -158,7 +166,7 @@ namespace Incredulous.Twitch
             if (twitchCredentials.oauth.Length <= 0 || twitchCredentials.username.Length <= 0 || twitchCredentials.channel.Length <= 0)
             {
                 alertQueue.Enqueue(ConnectionAlert.MissingLogin);
-                return;
+                yield break;
             }
 
             // Fix formatting (twitchapps.com)
@@ -169,23 +177,18 @@ namespace Incredulous.Twitch
             connection = new TwitchConnection(this);
 
             // Check the connection
-            if (!connection.tcpClient.Connected)
+            if (connection.tcpClient == null || !connection.tcpClient.Connected)
             {
                 alertQueue.Enqueue(ConnectionAlert.NoConnection);
-                return;
+                yield break;
             }
+
+            // Wait for an interval if there has been more than one failed connection attempt
+            if (failCount >= 2)
+                yield return new WaitForSecondsRealtime(1 << (failCount - 2));
 
             // Begin the threads and attempt to authenticate
             connection.Begin();
-        }
-
-        /// <summary>
-        /// Disconnect from Twitch IRC.
-        /// </summary>
-        [ContextMenu("Disconnect IRC")]
-        public void Disconnect()
-        {
-            StartCoroutine(DisconnectCoroutine(connection));
         }
 
         /// <summary>
@@ -262,16 +265,22 @@ namespace Incredulous.Twitch
                 case ConnectionAlert.MISSING_LOGIN:
                 case ConnectionAlert.NO_CONNECTION:
                     Debug.LogError(alert.message);
+                    failCount = 0;
                     Disconnect();
                     break;
 
                 case ConnectionAlert.CONNECTION_INTERRUPTED:
                     Debug.LogError(alert.message);
+                    failCount++;
                     Connect();
                     break;
 
-                case ConnectionAlert.CONNECTED_TO_SERVER:
                 case ConnectionAlert.JOINED_CHANNEL:
+                    Debug.Log(alert.message);
+                    failCount = 0;
+                    break;
+
+                default:
                     Debug.Log(alert.message);
                     break;
             }

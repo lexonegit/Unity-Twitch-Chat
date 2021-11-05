@@ -8,8 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - TwitchIRC.IsConnected, which is true only while there is a stable connection to Twitch
 - TwitchIRC.debugThreads, which allows debug warnings for thread termination to be turned on/off
+- Rate limiting
+    - RateLimit class
+    - Client sets rate limit based on user's channel permissions
+    - Client delays messages that exceeed the rate limit
+    - Client sends a warning when a message is queued that will exceed the rate limits
+- IRCTags.ContainsEmote and IRCTags.HasBadge (previously exclusive to the Chatter object)
+- Unity Tooltips for all inspector fields of the TwitchIRC class
 ### Changed
+- Chatter.MessageContainsEmote -> Chatter.ContainsEmote
+- Client now uses a standard backoff interval (0s, 1s, 2s, 4s, 8s, ...) when reattempting a failed connection
 - Fixed issue where TwitchIRC did not end a failed connection
+- Fixed issue where TwitchIRC did not properly handle no internet connection
+- Client now checks that the connection still exists in the receive thread instead of a third thread
 - On disconnect, pending status updates and chat messages are now propogated before a connection is terminated
 - Reduced default write interval to 100ms for faster responsiveness
 - Settled on a versioning method for pre-release versions
