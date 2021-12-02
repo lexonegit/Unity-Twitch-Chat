@@ -55,7 +55,7 @@ namespace Incredulous.Twitch
         /// <summary>
         /// Whether this instance is currently connected to Twitch.
         /// </summary>
-        public bool isConnnected
+        public bool isConnected
         {
             get => _isConnected == 1;
             private set => Interlocked.Exchange(ref _isConnected, value ? 1 : 0);
@@ -129,7 +129,7 @@ namespace Incredulous.Twitch
 
             pendingDisconnect = true;
 
-            isConnnected = false;
+            isConnected = false;
             continueThreads = false;
 
             while (receiveThread.IsAlive)
@@ -149,7 +149,7 @@ namespace Incredulous.Twitch
                 return;
 
             pendingDisconnect = true;
-            isConnnected = false;
+            isConnected = false;
             continueThreads = false;
             receiveThread?.Join();
             sendThread?.Join();

@@ -62,7 +62,7 @@ namespace Incredulous.Twitch
         /// <summary>
         /// Whether the Twitch client is successfully connected to Twitch.
         /// </summary>
-        public bool IsConnected => connection?.isConnnected ?? false;
+        public bool IsConnected => connection?.isConnected ?? false;
 
         /// <summary>
         /// The first created instance of TwitchIRC, if it exists.
@@ -182,6 +182,23 @@ namespace Incredulous.Twitch
         {
             StartCoroutine(DisconnectCoroutine(connection));
         }
+
+        /// <summary>
+        /// Sends a chat message.
+        /// </summary>
+        /// <param name="message"></param>
+        public void SendChatMessage(string message) => connection?.SendChatMessage(message);
+
+        /// <summary>
+        /// Queues a command to be sent to the IRC server. Prioritzed commands will be sent without regard for rate limits.
+        /// </summary>
+        public void SendCommand(string command, bool prioritized = false) => connection?.SendCommand(command, prioritized);
+
+        /// <summary>
+        /// Sends a PING message to the Twitch IRC server.
+        /// </summary>
+        [ContextMenu("Ping Server")]
+        public void Ping() => connection?.Ping();
 
         private IEnumerator ConnectCoroutine()
         {

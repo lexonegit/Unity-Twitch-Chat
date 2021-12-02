@@ -16,6 +16,7 @@
 
         public static readonly ConnectionAlert RateLimitWarning = new ConnectionAlert(RATE_LIMIT_WARNING, $"{tagWarning} Too many commands/messages have been sent. Pending messages will not be sent until cooldown has ended.");
         public static readonly ConnectionAlert ConnectedToServer = new ConnectionAlert(CONNECTED_TO_SERVER, $"{tagConnection} Connected to server.");
+        public static readonly ConnectionAlert Pong = new ConnectionAlert(PONG, $"{tagStatus} Server responded with PONG");
         public static readonly ConnectionAlert JoinedChannel = new ConnectionAlert(JOINED_CHANNEL, $"{tagJoin} Successfully joined channel!");
         public static readonly ConnectionAlert MissingLogin = new ConnectionAlert(MISSING_LOGIN, $"{tagError} Missing login information. Please check your credentials.");
         public static readonly ConnectionAlert BadLogin = new ConnectionAlert(BAD_LOGIN, $"{tagError} Login authentication failed.");
@@ -24,6 +25,7 @@
 
         public const int RATE_LIMIT_WARNING = -1;
         public const int CONNECTED_TO_SERVER = 001;
+        public const int PONG = 007;
         public const int JOINED_CHANNEL = 353;
         public const int MISSING_LOGIN = 431;
         public const int BAD_LOGIN = 464;

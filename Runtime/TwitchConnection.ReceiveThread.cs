@@ -31,7 +31,7 @@ namespace Incredulous.Twitch
                 {
                     // Sometimes, right after a new TcpClient is created, the socket says
                     // it has been shutdown. This catches that case and reconnects.
-                    isConnnected = false;
+                    isConnected = false;
                     alertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
                     break;
                 }
@@ -120,6 +120,10 @@ namespace Incredulous.Twitch
             // Respond to PING messages
             if (raw.StartsWith("PING"))
                 SendCommand("PONG :tmi.twitch.tv");
+
+            // Notify when PONG messages are received.
+            if (raw.StartsWith(":tmi.twitch.tv PONG"))
+                alertQueue.Enqueue(ConnectionAlert.Pong);
         }
 
         /// <summary>
@@ -129,7 +133,7 @@ namespace Incredulous.Twitch
         {
             if (ircString.Contains(":Login authentication failed"))
             {
-                isConnnected = false;
+                isConnected = false;
                 alertQueue.Enqueue(ConnectionAlert.BadLogin);
             }
         }
@@ -146,7 +150,7 @@ namespace Incredulous.Twitch
                     SendCommand("JOIN #" + twitchCredentials.channel.ToLower(), true);
                     break;
                 case "353":
-                    isConnnected = true;
+                    isConnected = true;
                     alertQueue.Enqueue(ConnectionAlert.JoinedChannel);
                     break;
             }
