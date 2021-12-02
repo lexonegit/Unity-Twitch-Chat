@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1446039368257072906}
   - component: {fileID: 1446039368257072907}
+  - component: {fileID: 3039776206827660459}
   m_Layer: 0
-  m_Name: MainThread
+  m_Name: TwitchIRC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40,6 +41,40 @@ MonoBehaviour:
   m_GameObject: {fileID: 1446039368257072904}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55c6e21a112260c41a6d5072bb8d140f, type: 3}
+  m_Script: {fileID: 11500000, guid: 0fd8672eec3178b47b459f5fd3e7993c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3039776206827660459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1446039368257072904}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da6a2e7300291fe4e90ad1a4b47edb3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ircAddress: irc.chat.twitch.tv
+  port: 6667
+  twitchDetails:
+    oauth: 
+    nick: 
+    channel: 
+  settings:
+    connectOnStart: 1
+    parseBadges: 1
+    parseTwitchEmotes: 1
+    debugIRC: 1
+  clientChatter:
+    login: 
+    channel: 
+    message: 
+    tags:
+      colorHex: '#FFFFFF'
+      displayName: 
+      channelId: 
+      userId: 
+      badges: []
+      emotes: []
