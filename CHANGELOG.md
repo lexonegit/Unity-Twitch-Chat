@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- TwitchIRC.singleton, which when true enables DontDestroyOnLoad and destroys duplicate instances
 - TwitchIRC.IsConnected, which is true only while there is a stable connection to Twitch
 - TwitchIRC.debugThreads, which allows debug warnings for thread termination to be turned on/off
 - Rate limiting

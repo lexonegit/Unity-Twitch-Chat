@@ -42,6 +42,9 @@ namespace Incredulous.Twitch
 
         [Header("Other Settings")]
 
+        [Tooltip("When true, duplicate instances of TwitchIRC will be destroyed. The first instance will be set to DontDestroyOnLoad.")]
+        [SerializeField] private bool singleton;
+
         [Tooltip("Whether a connection to Twitch should be established on Start.")]
         public bool connectOnStart = true;
 
@@ -61,6 +64,10 @@ namespace Incredulous.Twitch
         /// </summary>
         public bool IsConnected => connection?.isConnnected ?? false;
 
+        /// <summary>
+        /// The first created instance of TwitchIRC, if it exists.
+        /// </summary>
+        public static TwitchIRC Instance { get; private set; }
 
         /// <summary>
         /// A queue for connection alerts.
@@ -91,6 +98,25 @@ namespace Incredulous.Twitch
 
         #region Unity MonoBehaviour Messages
 
+        private void Awake()
+        {
+            if (Instance)
+            {
+                if (singleton)
+                {
+                    gameObject.SetActive(false);
+                    Destroy(gameObject);
+                }
+            }
+            else
+            {
+                Instance = this;
+
+                if (singleton)
+                    DontDestroyOnLoad(gameObject);
+            }
+        }
+
         private void Start()
         {
             if (connectOnStart)
@@ -102,13 +128,14 @@ namespace Incredulous.Twitch
             HandlePendingInformation();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             BlockingDisconnect(connection);
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
+            if (singleton && Instance == this) Instance = null;
             BlockingDisconnect(connection);
         }
 
