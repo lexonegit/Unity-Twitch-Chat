@@ -22,7 +22,7 @@ Twitch IRC for Unity can be installed via the package manager. You can install t
 
 1. Create a new empty GameObject and add the **TwitchIRC** component
 2. In the inspector, enter your Twitch login information (OAuth, nick, channel)
-3. Make sure that "Connect on Start" is checked in the inspector and hit Play– you should see a successful **JOIN** message in your Unity Console!
+3. Make sure that "Connect on Start" is checked in the inspector and hit Play– you should see a successful **JOIN** message in your Unity Console!
 
 To start handling chat messages, add a listener to **TwitchIRC.ChatMessageEvent**. The listener will receive a **Chatter** object, which contains informaton about the chat message such as the message itself and the username of the sender.
 
