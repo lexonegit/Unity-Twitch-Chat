@@ -11,7 +11,7 @@ public class ExampleIRCListener : MonoBehaviour
     private void Start()
     {
         // This is done just for the sake of simplicity,
-        // In your own script, you should instead have a reference 
+        // In your own script, you should instead have a direct reference 
         // to the TwitchIRC component (inspector)
         IRC = GameObject.Find("TwitchIRC").GetComponent<TwitchIRC>();
 
@@ -45,7 +45,6 @@ public class ExampleIRCListener : MonoBehaviour
             Debug.Log(chatter.tags.displayName + " said !join");
 
         // Get chatter's name color (RGBA Format)
-        //
         Color nameColor = chatter.GetRGBAColor();
 
         // Check if chatter's display name is "font safe"

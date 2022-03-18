@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// This script is used to send multithreaded operations to the main Unity thread
+/// </summary>
 public class MainThread : MonoBehaviour
 {
     public static MainThread Instance { get; set; }
