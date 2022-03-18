@@ -2,6 +2,9 @@
 using System.Net.Sockets;
 using System.Text;
 
+/// <summary>
+/// Extension methods for the NetworkStream class
+/// </summary>
 public static class NetworkStreamExtensionMethods
 {
     public static void WriteLine(this NetworkStream stream, string output, bool debug = false)

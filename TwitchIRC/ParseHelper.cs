@@ -1,9 +1,7 @@
 ﻿using System.Text.RegularExpressions;
-using System.Net.Sockets;
 
 public static class ParseHelper
 {
-
     public static int IndexOfNth(this string source, char val, int nth = 0)
     {
         int index = source.IndexOf(val);
@@ -36,15 +34,15 @@ public static class ParseHelper
         IRCTags tags = new IRCTags();
         string[] split = tagString.Split(';');
 
-        //Loop through tags
+        // Loop through tags
         for (int i = 0; i < split.Length; ++i)
         {
             string value = split[i].Substring(split[i].IndexOf('=') + 1);
 
-            if (value.Length <= 0) //Ignore empty tags
+            if (value.Length <= 0) // Ignore empty tags
                 continue;
 
-            //Find the tags needed
+            // Find the tags needed
             switch (split[i].Substring(0, split[i].IndexOf('=')))
             {
                 case "badges":
@@ -91,7 +89,7 @@ public static class ParseHelper
         if (index == -1)
             return channel;
         else
-            //Further parsing (needed for PRIVMSG for example)
+            // Further parsing (needed for PRIVMSG for example)
             return channel.Substring(0, index);
     }
 

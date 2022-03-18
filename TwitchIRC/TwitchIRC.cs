@@ -5,7 +5,9 @@ using System.IO;
 using System.Threading;
 using UnityEngine;
 
-// https://github.com/lexonegit/Unity-Twitch-Chat
+/// <summary>
+/// Twitch.tv IRC client for Unity https://github.com/lexonegit/Unity-Twitch-Chat
+/// </summary>
 public class TwitchIRC : MonoBehaviour
 {
     [HideInInspector] public class NewChatMessageEvent : UnityEngine.Events.UnityEvent<Chatter> { }
@@ -42,7 +44,7 @@ public class TwitchIRC : MonoBehaviour
     [System.Serializable]
     public class Settings
     {
-        public bool connectOnStart = true;
+        public bool autoConnectOnStart = true;
         public bool parseBadges = true;
         public bool parseTwitchEmotes = true;
         [Space(12f)]
@@ -52,7 +54,7 @@ public class TwitchIRC : MonoBehaviour
     #region Unity MonoBehaviour functions
     private void Start()
     {
-        if (settings.connectOnStart)
+        if (settings.autoConnectOnStart)
             StartCoroutine(PrepareConnection());
     }
 
@@ -161,7 +163,7 @@ public class TwitchIRC : MonoBehaviour
                     // or something else... Not sure why they happen. It is seemingly random.
                     //
                     // When this happens, we are still "connected" so try reconnecting
-                    //
+
                     if (connected)
                     {
                         Debug.LogError("Error while reading IRC input. Reconnecting...");
@@ -195,22 +197,22 @@ public class TwitchIRC : MonoBehaviour
 
                     switch (type)
                     {
-                        case "PRIVMSG": // = Chat message
+                        case "PRIVMSG": // Chat message
                             HandlePRIVMSG(ircString, tagString);
                             break;
-                        case "USERSTATE": // = Userstate
+                        case "USERSTATE": // Userstate
                             HandleUSERSTATE(ircString, tagString);
                             break;
-                        case "353": // = Successful channel join
+                        case "353": // Successful channel join
                             HandleRPL(type);
                             break;
-                        case "001": // = Successful IRC connection
+                        case "001": // Successful IRC connection
                             HandleRPL(type);
                             break;
                     }
                 }
 
-                //Respond to PING messages
+                // Respond to PING messages
                 if (raw.StartsWith("PING"))
                 {
                     SendCommand("PONG :tmi.twitch.tv", true);
@@ -228,7 +230,7 @@ public class TwitchIRC : MonoBehaviour
 
         System.Diagnostics.Stopwatch cooldown = new System.Diagnostics.Stopwatch();
         
-        //Read loop
+        // Read loop
         while (connected)
         {
             if (outputQueue.Count <= 0)
@@ -237,7 +239,8 @@ public class TwitchIRC : MonoBehaviour
             // Send next output from outputQueue
             stream.WriteLine(outputQueue.Dequeue(), settings.debugIRC);
 
-            //Cooldown timer (to avoid Twitch chat ratelimiting)
+            // Cooldown timer for avoiding Twitch IRC rate limits
+            // https://dev.twitch.tv/docs/irc/guide#rate-limits
             cooldown.Restart();
             while (cooldown.ElapsedMilliseconds < 1750)
                 continue; 
@@ -293,7 +296,7 @@ public class TwitchIRC : MonoBehaviour
 
     public void SendCommand(string command, bool instant = false)
     {
-        if (instant) //Instant priority (mainly for PING responses)
+        if (instant) // Instant priority (intended for PING responses)
             stream.WriteLine(command, settings.debugIRC);
         else
             outputQueue.Enqueue(command); // Place command in queue
