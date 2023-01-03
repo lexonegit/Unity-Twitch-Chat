@@ -53,6 +53,6 @@ namespace Lexone.UnityTwitchChat
         /// <summary>
         /// Returns true if the chatter has a given badge.
         /// </summary>
-        public bool HasBadge(string badge) => tags.HasBadge(badge);
+        public bool HasBadge(string badgeName) => tags.HasBadge(badgeName);
     }
 }
