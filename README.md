@@ -5,7 +5,7 @@ This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/i
 In short, this allows you to integrate Twitch Chat to your Unity projects.
 
 ## Chat message example
-<img src="https://user-images.githubusercontent.com/18125997/210402050-a26394e6-6a5c-48e7-a366-7f9f0caf379a.png">
+<img src="https://user-images.githubusercontent.com/18125997/210407885-b2c49e1e-4537-41e9-ad5b-2d8c4c8f1077.png">
 
 ### Supported features
 - Reading and sending chat messages
