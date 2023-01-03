@@ -763,10 +763,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   address: irc.chat.twitch.tv
   port: 6667
-  useAnonymousLogin: 1
+  useAnonymousLogin: 0
   oauth: 
   username: 
-  channel: Lexone
+  channel: 
   singleton: 1
   connectOnStart: 1
   showIRCDebug: 1
