@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2023-01-03
+
+### Added
+- Support for anonymous login
+- Support for limiting how many messages can be processed each frame
+- Remake example project
+- Extensions class
+- Utils class
+
+### Changed
+- Chatter.emotes is now an array instead of a list
+- Updated package.json
+- Reorganized folder structure
+- Restructured the code in various ways (pretty much no functional changes) 
+- Replaced asmdef file
+- Change namespace to Lexone.UnityTwitchChat
+- Fixed old connection not being terminated when a new connection is made
+- Renamed some files
+
+### Removed
+- Removed priority rate limit check (for now)
+- Removed a bunch of unused files
+
 ## [1.1.0] - 2022-01-20
 ### Added
 - TwitchIRC.singleton, which when true enables DontDestroyOnLoad and destroys duplicate instances
