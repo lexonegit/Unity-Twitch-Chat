@@ -1,12 +1,9 @@
-﻿using System.Text.RegularExpressions;
-using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
-namespace Incredulous.Twitch
+namespace UnityTwitchChat
 {
-
     internal static class ParseHelper
     {
-
         public static int IndexOfNth(this string source, char val, int nth = 0)
         {
             int index = source.IndexOf(val);
@@ -25,12 +22,6 @@ namespace Incredulous.Twitch
         private static Regex symbolRegex = new Regex(@"^[a-zA-Z0-9_]+$", RegexOptions.Compiled);
         public static bool CheckNameRegex(string displayName)
         {
-            // If unusual characters/symbols are present in user's displayName then use the actual login name instead (login name is always lowercase)
-            // This is useful because most fonts do not support those characters
-            //
-            // Allowed characters are: a-z, A-Z, 0-9, _
-
-            // True = symbols detected
             return symbolRegex.IsMatch(displayName);
         }
 
@@ -39,15 +30,15 @@ namespace Incredulous.Twitch
             IRCTags tags = new IRCTags();
             string[] split = tagString.Split(';');
 
-            //Loop through tags
+            // Loop through tags
             for (int i = 0; i < split.Length; ++i)
             {
                 string value = split[i].Substring(split[i].IndexOf('=') + 1);
 
-                if (value.Length <= 0) //Ignore empty tags
+                if (value.Length <= 0) // Ignore empty tags
                     continue;
 
-                //Find the tags needed
+                // Find the tags we are interested in
                 switch (split[i].Substring(0, split[i].IndexOf('=')))
                 {
                     case "badges":
@@ -66,7 +57,7 @@ namespace Incredulous.Twitch
                         tags.emotes.AddRange(ParseTwitchEmotes(value.Split('/')));
                         continue;
 
-                    case "room-id": // room-id = channelId
+                    case "room-id": // room-id is the same as channel id
                         tags.channelId = value;
                         continue;
 
@@ -92,7 +83,7 @@ namespace Incredulous.Twitch
             if (index == -1)
                 return channel;
             else
-                //Further parsing (needed for PRIVMSG for example)
+                // Further parsing (needed for PRIVMSG for example)
                 return channel.Substring(0, index);
         }
 
@@ -144,5 +135,4 @@ namespace Incredulous.Twitch
             return badges;
         }
     }
-
 }
