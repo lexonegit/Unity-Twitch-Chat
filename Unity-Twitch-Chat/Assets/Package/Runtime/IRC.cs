@@ -49,7 +49,7 @@ namespace Lexone.UnityTwitchChat
         [Tooltip("The number of milliseconds between each time the read thread checks for new messages.")]
         [SerializeField] public int readInterval = 50;
         [Tooltip("The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.")]
-        [SerializeField] public int readBufferSize = 128;
+        [SerializeField] public int readBufferSize = 256;
 
         [Header("Chat write settings (write thread)")]
 
