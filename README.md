@@ -4,20 +4,20 @@ This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/i
 
 In short, this allows you to integrate Twitch Chat to your Unity projects.
 
-## Supported features
+### Supported features
 - Reading and sending chat messages
 - Parsing Twitch emotes and badges
 - Optional anonymous login
 
 
-## Unsupported features
+### Unsupported features
 - Special messages (whispers, sub/resub, raids, first time viewers, etc)
 - Bits cheering, channel points, predictions, etc
 - Moderation (ban, timeout, etc)
 - Third party extensions (FFZ, BTTV, 7TV, etc)
 - and more...
 
-## Other limitations
+### Other limitations
 - WebGL builds are not supported
 
 
@@ -26,8 +26,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 - Open Unity Package Manager (Window -> Package Manager)
 - Click the `+` button in the top left corner
 - Select `Add package from git URL...`
-- Copy and paste the following URL:
-`https://github.com/lexonegit/Unity-Twitch-Chat/Unity-Twitch-Chat/Assets/Package/`
+- Copy and paste the following URL:<br>`https://github.com/lexonegit/Unity-Twitch-Chat/Unity-Twitch-Chat/Assets/Package#version=1.0.0`
 - Install the package
 
 
@@ -46,7 +45,7 @@ OAuth and username are not needed if `Use Anonymous Login` is enabled.
 
 ### IRC.cs
 - IRC.Connect() -> Connects to Twitch IRC
-- IRC.Disconnect() -> Disconnects from Twitch IRC
+- IRC.Disconnect() - Disconnects from Twitch IRC
 - IRC.SendChatMessage(string message) -> Sends a chat message to the channel
 - IRC.Ping() -> Sends a PING message to the Twitch IRC server
 - IRC.OnMessageReceived -> Event that is invoked when a chat message is received
