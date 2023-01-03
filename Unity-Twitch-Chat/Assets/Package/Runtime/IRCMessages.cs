@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     [System.Serializable]
     public struct ChatterEmote

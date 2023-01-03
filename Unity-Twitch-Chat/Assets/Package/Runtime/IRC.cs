@@ -3,8 +3,9 @@ using System.Collections;
 using UnityEngine;
 using System.Collections.Concurrent;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
+    [AddComponentMenu("Unity Twitch Chat/Twitch IRC")]
     public partial class IRC : MonoBehaviour
     {
         [Header("Twitch IRC address and port")]

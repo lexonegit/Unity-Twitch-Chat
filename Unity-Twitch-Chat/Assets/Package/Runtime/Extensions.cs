@@ -2,7 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     public static class Extensions
     {

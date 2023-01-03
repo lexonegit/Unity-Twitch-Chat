@@ -1,4 +1,4 @@
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     /// <summary>
     /// https://www.ietf.org/rfc/rfc1459.txt (starting on page 42 - Replies)

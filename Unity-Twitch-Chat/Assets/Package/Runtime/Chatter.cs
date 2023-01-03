@@ -1,7 +1,7 @@
 
 using UnityEngine;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     [System.Serializable]
     public class Chatter

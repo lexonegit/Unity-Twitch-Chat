@@ -3,7 +3,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Concurrent;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     internal partial class TwitchConnection
     {

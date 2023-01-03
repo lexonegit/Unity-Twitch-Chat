@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace UnityTwitchChat
+namespace Lexone.UnityTwitchChat
 {
     internal static class ParseHelper
     {
