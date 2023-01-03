@@ -46,6 +46,10 @@ OAuth and username are not needed if `Use Anonymous Login` is enabled.
 
 <i>Having issues? Check out the included ExampleProject for a better understanding.</i>
 
+## Example project
+Spawn chatters as jumping boxes. Box color is based on their primary badge.
+<img src="https://user-images.githubusercontent.com/18125997/210427322-27d2231c-5123-4785-997e-53838cfc8972.gif">
+
 ## API documentation
 
 ### IRC.cs
