@@ -1,6 +1,6 @@
 # Unity Twitch Chat
 
-This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.<br>The primary goal is to be able to read and send chat messages.
+This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.<br>The primary goal is to be able to read and send chat messages as efficiently as possible.
 
 In short, this allows you to integrate Twitch Chat to your Unity projects.
 
@@ -11,6 +11,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 - Reading and sending chat messages
 - Parsing Twitch emotes and badges
 - Optional anonymous login
+- Automatic ratelimit checks
 
 ### Unsupported features
 - Special messages (whispers, sub/resub, raids, first time viewers, etc)
@@ -31,7 +32,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 ```
 https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package
 ```
-- Finish by clicking `Add`
+- Install by clicking `Add`
 
 
 ## Quick start
