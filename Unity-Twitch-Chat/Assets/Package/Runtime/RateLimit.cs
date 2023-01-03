@@ -1,5 +1,6 @@
 using System;
 
+// See: https://dev.twitch.tv/docs/irc#rate-limits
 public struct RateLimit
 {
     public RateLimit(int count, TimeSpan timeSpan)
@@ -20,6 +21,12 @@ public struct RateLimit
     /// The chat command/message rate limit for users in a channel who are the broadcaster or have moderator permissions.
     /// </summary>
     public readonly static RateLimit ChatModerator = new RateLimit(100, new TimeSpan(0, 0, 30));
+
+
+    //
+    // The rest is currently not implemented/used
+    //
+
 
     /// <summary>
     /// The site-wide rate limit for verified bots to send chat commands/messages. <i><b>Note:</b> Channel level rate limits still apply based on the bot's user permissions.</i>
