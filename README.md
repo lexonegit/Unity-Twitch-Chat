@@ -26,7 +26,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 - Open Unity Package Manager (Window -> Package Manager)
 - Click the `+` button in the top left corner
 - Select `Add package from git URL...`
-- Copy and paste the following URL:<br>`https://github.com/lexonegit/Unity-Twitch-Chat/Unity-Twitch-Chat/Assets/Package#version=1.0.0`
+- Copy and paste the following URL:<br>```https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package#version=1.0.0```
 - Install the package
 
 
@@ -56,6 +56,9 @@ OAuth and username are not needed if `Use Anonymous Login` is enabled.
 - Chatter.IsDisplayNameFontSafe() -> Returns true if displayName is "font-safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
 - Chatter.ContainsEmote(string emoteId) -> Returns true if the chatter's message contains the specified emote (by id)
 - Chatter.HasBadge(string badgeName) -> Returns true if the chatter has the specified badge
+
+## License
+<a href="https://github.com/lexonegit/Unity-Twitch-Chat/blob/master/LICENSE">MIT License</a>
 
 ## Projects made with Unity Twitch Chat
 
