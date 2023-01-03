@@ -5,6 +5,7 @@ using Lexone.UnityTwitchChat;
 
 public class ListenerExample : MonoBehaviour
 {
+    public Chatter chatterObject; // Latest chatter object
     public BoxController boxPrefab;
     public int maxBoxes = 100;
 
@@ -31,6 +32,9 @@ public class ListenerExample : MonoBehaviour
 
         // Initialize the box with the chatter details
         box.Initialize(chatter);
+
+        // This is just to show the latest chatter object in the inspector
+        chatterObject = chatter;
 
         spawnCount++;
     }
