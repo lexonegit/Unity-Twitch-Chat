@@ -1,8 +1,8 @@
+
 using UnityEngine;
 
-namespace Incredulous.Twitch
+namespace UnityTwitchChat
 {
-
     [System.Serializable]
     public class Chatter
     {
@@ -18,19 +18,23 @@ namespace Incredulous.Twitch
         public IRCTags tags = null;
 
         /// <summary>
-        /// Get RGBA color using HEX color code
+        /// Returns the RGBA color of the chatter's name (tags.colorHex)
         /// </summary>
-        public Color GetRGBAColor()
+        public Color GetNameColor()
         {
-            if (ColorUtility.TryParseHtmlString(tags.colorHex, out Color color))
+            if (
+                tags.colorHex.Length > 0 &&
+                ColorUtility.TryParseHtmlString(tags.colorHex, out Color color)
+            )
                 return color;
             else
-                //Return default white if parsing fails for some reason
-                return new Color(1, 1, 1, 1);
+                return new Color(1, 1, 1, 1); // Failed parsing color -> return white
         }
 
         /// <summary>
-        /// Returns true if name is "font-safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
+        /// <para>Returns true if displayName is "font-safe" 
+        /// meaning that it only contains characters: a-z, A-Z, 0-9, _</para>
+        /// <para>Useful because most fonts do not support unusual characters</para>
         /// </summary>
         public bool IsDisplayNameFontSafe()
         {
@@ -38,14 +42,13 @@ namespace Incredulous.Twitch
         }
 
         /// <summary>
-        /// Returns whether the message contain a given emote.
+        /// Returns true if the chatter's message contains a given emote (by emote ID)
         /// </summary>
-        public bool ContainsEmote(string emote) => tags.ContainsEmote(emote);
+        public bool ContainsEmote(string emoteId) => tags.ContainsEmote(emoteId);
 
         /// <summary>
-        /// Returns whether the message has a given badge.
+        /// Returns true if the chatter has a given badge.
         /// </summary>
         public bool HasBadge(string badge) => tags.HasBadge(badge);
     }
-
 }
