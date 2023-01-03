@@ -4,11 +4,13 @@ This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/i
 
 In short, this allows you to integrate Twitch Chat to your Unity projects.
 
+## Chat message example
+<img src="https://user-images.githubusercontent.com/18125997/210402050-a26394e6-6a5c-48e7-a366-7f9f0caf379a.png">
+
 ### Supported features
 - Reading and sending chat messages
 - Parsing Twitch emotes and badges
 - Optional anonymous login
-
 
 ### Unsupported features
 - Special messages (whispers, sub/resub, raids, first time viewers, etc)
@@ -20,13 +22,15 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 ### Other limitations
 - WebGL builds are not supported
 
-
 ## Installation
 
 - Open Unity Package Manager (Window -> Package Manager)
 - Click the `+` button in the top left corner
 - Select `Add package from git URL...`
-- Copy and paste the following URL:<br>```https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package#version=1.0.0```
+- Copy and paste the following URL:<br>
+```
+https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package#version=1.0.0
+```
 - Install the package
 
 
@@ -44,18 +48,19 @@ OAuth and username are not needed if `Use Anonymous Login` is enabled.
 ## API documentation
 
 ### IRC.cs
-- IRC.Connect() -> Connects to Twitch IRC
-- IRC.Disconnect() - Disconnects from Twitch IRC
-- IRC.SendChatMessage(string message) -> Sends a chat message to the channel
-- IRC.Ping() -> Sends a PING message to the Twitch IRC server
-- IRC.OnMessageReceived -> Event that is invoked when a chat message is received
-- IRC.OnConnectionAlert -> Event that is invoked when a connection alert is received
+- **IRC.Connect()** -> Connects to Twitch IRC
+- **IRC.Disconnect()** - Disconnects from Twitch IRC
+- **IRC.SendChatMessage(string message)** -> Sends a chat message to the channel
+- **IRC.Ping()** -> Sends a PING message to the Twitch IRC server
+- **IRC.OnMessageReceived** -> Event that is invoked when a chat message is received
+- **IRC.OnConnectionAlert** -> Event that is invoked when a connection alert is received
+- **IRC.ClientUserTags** -> The tags (badges, name color, etc) of the client user
 
 ### Chatter.cs
-- Chatter.GetNameColor() -> Returns the color of the chatter's name
-- Chatter.IsDisplayNameFontSafe() -> Returns true if displayName is "font-safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
-- Chatter.ContainsEmote(string emoteId) -> Returns true if the chatter's message contains the specified emote (by id)
-- Chatter.HasBadge(string badgeName) -> Returns true if the chatter has the specified badge
+- **Chatter.GetNameColor()** -> Returns the color of the chatter's name
+- **Chatter.IsDisplayNameFontSafe()** -> Returns true if displayName is "font-safe" meaning that it only contains characters: a-z, A-Z, 0-9, _
+- **Chatter.ContainsEmote(string emoteId)** -> Returns true if the chatter's message contains the specified emote (by id)
+- **Chatter.HasBadge(string badgeName)** -> Returns true if the chatter has the specified badge
 
 ## License
 <a href="https://github.com/lexonegit/Unity-Twitch-Chat/blob/master/LICENSE">MIT License</a>
