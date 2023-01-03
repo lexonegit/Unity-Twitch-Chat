@@ -195,7 +195,7 @@ namespace Lexone.UnityTwitchChat
             else
             {
                 // Real user login
-                if (oauth.Length <= 0 || username.Length <= 0 || channel.Length <= 0)
+                if (oauth.Length <= 0 || username.Length <= 0)
                 {
                     alertQueue.Enqueue(IRCReply.MISSING_LOGIN_INFO);
                     return;
@@ -206,11 +206,17 @@ namespace Lexone.UnityTwitchChat
                     oauth = oauth.Substring(6);
             }
 
+            if (channel.Length <= 0)
+            {
+                alertQueue.Enqueue(IRCReply.MISSING_LOGIN_INFO);
+                return;
+            }
+
             StartCoroutine(StartConnection());
             IEnumerator StartConnection()
             {
                 if (connection != null) // End current connection if it exists
-                    Disconnect();
+                    yield return StartCoroutine(NonBlockingDisconnect());
 
                 connection = new TwitchConnection(this);
 
@@ -243,16 +249,17 @@ namespace Lexone.UnityTwitchChat
                 return;
 
             StartCoroutine(NonBlockingDisconnect());
-            IEnumerator NonBlockingDisconnect()
-            {
-                yield return StartCoroutine(connection.End());
+        }
 
-                // Reset connection variable
-                connection = null;
+        private IEnumerator NonBlockingDisconnect()
+        {
+            yield return StartCoroutine(connection.End());
 
-                if (showIRCDebug)
-                    Debug.Log($"{Tags.alert} Disconnected from Twitch IRC");
-            }
+            // Reset connection variable
+            connection = null;
+
+            if (showIRCDebug)
+                Debug.Log($"{Tags.alert} Disconnected from Twitch IRC");
         }
 
         private void BlockingDisconnect()
