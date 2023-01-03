@@ -73,6 +73,7 @@ namespace Lexone.UnityTwitchChat
 
         [ContextMenu("Ping")]
         public void Ping() => connection?.Ping();
+        public IRCTags ClientUserTags => connection?.ClientUserTags;
 
         #region Unity methods
 

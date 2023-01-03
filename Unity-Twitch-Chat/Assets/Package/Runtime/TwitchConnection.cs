@@ -38,7 +38,7 @@ namespace Lexone.UnityTwitchChat
         public TcpClient tcpClient { get; private set; }
 
         private IRCTags _clientUserTags;
-        private IRCTags ClientUserTags
+        public IRCTags ClientUserTags
         {
             get => _clientUserTags;
             set => Interlocked.Exchange(ref _clientUserTags, value);
