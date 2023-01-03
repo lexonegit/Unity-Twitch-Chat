@@ -1,177 +1,132 @@
-﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Threading;
+using System.Collections.Concurrent;
 
-namespace Incredulous.Twitch
+namespace UnityTwitchChat
 {
-
     internal partial class TwitchConnection
     {
-        public TwitchConnection(TwitchIRC twitchIRC)
+        public TwitchConnection(IRC irc)
         {
             try
             {
-                tcpClient = new TcpClient(twitchIRC.ircAddress, twitchIRC.port);
+                tcpClient = new TcpClient(irc.address, irc.port);
             }
-            catch (Exception)
+            catch
             {
                 tcpClient = null;
             }
 
-            twitchCredentials = twitchIRC.twitchCredentials;
-            clientUserTags = twitchIRC.clientUserTags;
+            this.oauth = irc.oauth;
+            this.nick = irc.username;
+            this.channel = irc.channel;
 
-            readBufferSize = twitchIRC.readBufferSize;
-            readInterval = twitchIRC.readInterval;
-            writeInterval = twitchIRC.writeInterval;
+            this.readBufferSize = irc.readBufferSize;
+            this.readInterval = irc.readInterval;
+            this.writeInterval = irc.writeInterval;
 
-            alertQueue = twitchIRC.alertQueue;
-            chatterQueue = twitchIRC.chatterQueue;
+            this.alertQueue = irc.alertQueue;
+            this.chatterQueue = irc.chatterQueue;
 
-            chatRateLimit = twitchCredentials.username == twitchCredentials.channel ? RateLimit.ChatModerator : RateLimit.ChatRegular;
-            outputTimestamps = twitchIRC.outputTimestamps;
+            this.rateLimit = RateLimit.ChatRegular;
 
-            debugIRC = twitchIRC.debugIRC;
-            debugThreads = twitchIRC.debugThreads;
+            this.showIRCDebug = irc.showIRCDebug;
+            this.showThreadDebug = irc.showThreadDebug;
         }
 
-        /// <summary>
-        /// The TCP Client instance for this connection.
-        /// </summary>
         public TcpClient tcpClient { get; private set; }
 
-        /// <summary>
-        /// The client user's Twitch tags.
-        /// </summary>
-        public IRCTags clientUserTags
+        private IRCTags _clientUserTags;
+        private IRCTags ClientUserTags
         {
             get => _clientUserTags;
-            private set => Interlocked.Exchange(ref _clientUserTags, value);
+            set => Interlocked.Exchange(ref _clientUserTags, value);
         }
-        private IRCTags _clientUserTags;
 
-        /// <summary>
-        /// Whether this instance is currently connected to Twitch.
-        /// </summary>
-        public bool isConnected
+        private int _threadsRunning = 1;
+        private bool ThreadsRunning
         {
-            get => _isConnected == 1;
-            private set => Interlocked.Exchange(ref _isConnected, value ? 1 : 0);
+            get => _threadsRunning == 1;
+            set => Interlocked.Exchange(ref _threadsRunning, value ? 1 : 0);
         }
-        private int _isConnected;
 
-        /// <summary>
-        /// Whether this connection has received a disconnect request.
-        /// </summary>
-        public bool pendingDisconnect;
+        public bool disconnectCalled = false;
 
-        private readonly TwitchCredentials twitchCredentials;
+        private readonly string oauth;
+        private readonly string nick;
+        private readonly string channel;
         private readonly int readBufferSize;
         private readonly int readInterval;
         private readonly int writeInterval;
-        private readonly bool debugIRC;
-        private readonly bool debugThreads;
+        private readonly bool showIRCDebug;
+        private readonly bool showThreadDebug;
 
-        /// <summary>
-        /// A reference to the TwitchIRC manager's alert queue.
-        /// </summary>
-        private readonly ConcurrentQueue<ConnectionAlert> alertQueue;
-
-        /// <summary>
-        /// A reference to the TwitchIRC manager's chat message queue.
-        /// </summary>
+        private readonly ConcurrentQueue<IRCReply> alertQueue;
         private readonly ConcurrentQueue<Chatter> chatterQueue;
 
-        /// <summary>
-        /// A reference to the TwitchIRC manager's output timestamp queue (for rate limiting).
-        /// </summary>
-        private readonly ConcurrentQueue<DateTime> outputTimestamps;
+        private Thread readThread;
+        private Thread writeThread;
 
-        private Thread sendThread;
-        private Thread receiveThread;
-
-        private bool continueThreads
-        {
-            get => _continueThreads == 1;
-            set => Interlocked.Exchange(ref _continueThreads, value ? 1 : 0);
-        }
-        private int _continueThreads = 1;
-
-        private RateLimit chatRateLimit;
+        private RateLimit rateLimit = RateLimit.ChatRegular;
         private object rateLimitLock = new object();
 
-        /// <summary>
-        /// Initalizes a connection to Twitch and starts the send, receive, and check connection threads.
-        /// </summary>
         public void Begin()
         {
-            receiveThread = new Thread(() => ReceiveProcess());
-            sendThread = new Thread(() => SendProcess());
+            readThread = new Thread(() => ReadThreadLoop());
+            writeThread = new Thread(() => WriteThreadLoop());
 
-            receiveThread.Start();
-            sendThread.Start();
+            readThread.Start();
+            writeThread.Start();
 
-            // Queue login commands
-            SendCommand("PASS oauth:" + twitchCredentials.oauth.ToLower(), true);
-            SendCommand("NICK " + twitchCredentials.username.ToLower(), true);
-            SendCommand("CAP REQ :twitch.tv/tags twitch.tv/commands", true);
+            // Send connection commands
+            SendCommand("PASS oauth:" + oauth.ToLower(), true);
+            SendCommand("NICK " + nick.ToLower(), true);
+            SendCommand("CAP REQ :twitch.tv/tags twitch.tv/commands", true); // twitch.tv/membership
         }
 
-        /// <summary>
-        /// A coroutine which closes the connection and threads without blocking the main thread.
-        /// </summary>
         public IEnumerator End()
         {
-            if (tcpClient == null || pendingDisconnect)
+            if (tcpClient == null || disconnectCalled)
                 yield break;
 
-            pendingDisconnect = true;
+            disconnectCalled = true;
+            ThreadsRunning = false;
 
-            isConnected = false;
-            continueThreads = false;
-
-            while (receiveThread.IsAlive)
+            // Wait for the threads to stop
+            while (readThread.IsAlive)
                 yield return null;
-            while (sendThread.IsAlive)
+            while (writeThread.IsAlive)
                 yield return null;
 
             tcpClient.Close();
         }
 
-        /// <summary>
-        /// Terminates the connection to Twitch and blocks the main thread while the send, receive, and check connection threads end.
-        /// </summary>
-        public void BlockingEndAndClose()
+        public void BlockingEnd()
         {
             if (tcpClient == null)
                 return;
 
-            pendingDisconnect = true;
-            isConnected = false;
-            continueThreads = false;
-            receiveThread?.Join();
-            sendThread?.Join();
+            disconnectCalled = true;
+            ThreadsRunning = false;
+            readThread?.Join();
+            writeThread?.Join();
             tcpClient.Close();
         }
 
-        /// <summary>
-        /// Updates the rate limit based on the tags received from a USERSTATE message.
-        /// </summary>
-        private void UpdateRateLimits(IRCTags tags)
+        private void UpdateRateLimits()
         {
-            if (tags.HasBadge("broadcaster") || tags.HasBadge("moderator"))
+            if (ClientUserTags.HasBadge("broadcaster") || ClientUserTags.HasBadge("moderator"))
             {
                 lock (rateLimitLock)
-                    chatRateLimit = RateLimit.ChatModerator;
+                    rateLimit = RateLimit.ChatModerator;
             }
             else
             {
                 lock (rateLimitLock)
-                    chatRateLimit = RateLimit.ChatRegular;
+                    rateLimit = RateLimit.ChatRegular;
             }
         }
-    }
 
+    }
 }
