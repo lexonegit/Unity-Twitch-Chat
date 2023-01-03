@@ -54,7 +54,7 @@ namespace Lexone.UnityTwitchChat
                         continue;
 
                     case "emotes":
-                        tags.emotes.AddRange(ParseTwitchEmotes(value.Split('/')));
+                        tags.emotes = ParseTwitchEmotes(value.Split('/'));
                         continue;
 
                     case "room-id": // room-id is the same as channel id

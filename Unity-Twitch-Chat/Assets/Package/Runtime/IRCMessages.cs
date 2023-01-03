@@ -31,7 +31,7 @@ namespace Lexone.UnityTwitchChat
         public string userId = string.Empty;
 
         public ChatterBadge[] badges = new ChatterBadge[0];
-        public List<ChatterEmote> emotes = new List<ChatterEmote>();
+        public ChatterEmote[] emotes = new ChatterEmote[0];
 
         public bool ContainsEmote(string emoteId)
         {

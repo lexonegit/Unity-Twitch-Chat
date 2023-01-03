@@ -766,7 +766,7 @@ MonoBehaviour:
   useAnonymousLogin: 1
   oauth: 
   username: 
-  channel: pokelawls
+  channel: Lexone
   singleton: 1
   connectOnStart: 1
   showIRCDebug: 1
@@ -819,6 +819,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 974b535c3ec440b43a88f4a21641189d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chatterObject:
+    login: 
+    channel: 
+    message: 
+    tags:
+      colorHex: 
+      displayName: 
+      channelId: 
+      userId: 
+      badges: []
+      emotes: []
   boxPrefab: {fileID: 6611682557534193624, guid: 3ef85c00760080040a6cd2edfb587566, type: 3}
   maxBoxes: 100
 --- !u!4 &1979456470

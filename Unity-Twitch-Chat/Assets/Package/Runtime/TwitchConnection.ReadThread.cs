@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Text;
 using System.Threading;
 using System.Net.Sockets;
@@ -143,8 +144,11 @@ namespace Lexone.UnityTwitchChat
             var tags = ParseHelper.ParseTags(tagString);
 
             // Sort emotes by startIndex to match emote order in the actual chat message
-            if (tags.emotes.Count > 0)
-                tags.emotes.Sort((a, b) => a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
+            if (tags.emotes.Length > 0)
+            {
+                Array.Sort(tags.emotes, (a, b) => 
+                    a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
+            }
 
             // Queue new chatter object
             chatterQueue.Enqueue(new Chatter(login, channel, message, tags));
