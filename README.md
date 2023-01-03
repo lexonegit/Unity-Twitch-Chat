@@ -29,7 +29,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 - Select `Add package from git URL...`
 - Copy and paste the following URL:<br>
 ```
-https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package#version=1.0.0
+https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Assets/Package#version=1.2.0
 ```
 - Install the package
 
