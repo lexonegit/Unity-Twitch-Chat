@@ -1,95 +1,99 @@
+using UnityEngine;
 using System.Text;
 using System.Threading;
 using System.Net.Sockets;
-using UnityEngine;
 
-namespace Incredulous.Twitch
+namespace UnityTwitchChat
 {
-
     internal partial class TwitchConnection
     {
+        private string currentRawLine;
         private byte[] inputBuffer;
         private char[] chars;
-        private StringBuilder currentString = new StringBuilder();
         private Decoder decoder = Encoding.UTF8.GetDecoder();
 
-        /// <summary>
-        /// The IRC input process which will run on the receive thread.
-        /// </summary>
-        private void ReceiveProcess()
+        private void ReadThreadLoop()
         {
-            // get the Socket from the TcpClient
+            if (showThreadDebug)
+                Debug.Log($"{Tags.thread} Read thread started");
+
             Socket socket = tcpClient.Client;
-            currentString.Clear();
+            currentRawLine = string.Empty;
             inputBuffer = new byte[readBufferSize];
             chars = new char[readBufferSize];
 
-            while (continueThreads)
+            while (ThreadsRunning)
             {
-                // check if the socket is still connected
-                if (!CheckSocketConnection(socket))
+                if (!CheckConnection(socket))
                 {
                     // Sometimes, right after a new TcpClient is created, the socket says
-                    // it has been shutdown. This catches that case and reconnects.
-                    isConnected = false;
-                    alertQueue.Enqueue(ConnectionAlert.ConnectionInterrupted);
+                    // it has been shutdown. This catches that case and attempts reconnecting.
+                    alertQueue.Enqueue(IRCReply.CONNECTION_INTERRUPTED);
                     break;
                 }
 
-                // check if new data is available
                 while (socket.Available > 0)
                 {
-                    // receive the data
-                    var bytesReceived = socket.Receive(inputBuffer);
+                    // Receive data from the socket
+                    int bytesReceived = socket.Receive(inputBuffer);
 
-                    // decode the data into text
-                    var charCount = decoder.GetChars(inputBuffer, 0, bytesReceived, chars, 0);
+                    // Decode data into text
+                    int charCount = decoder.GetChars(inputBuffer, 0, bytesReceived, chars, 0);
 
-                    // iterate through the received characters
-                    for (var i = 0; i < charCount; i++)
+                    for (int i = 0; i < charCount; ++i)
                     {
-                        // if the character is a linebreak...
+                        // If the character is a linebreak, we have a complete line
                         if (chars[i] == '\n' || chars[i] == '\r')
                         {
-                            // handle a string, if there is one
-                            if (currentString.Length > 0)
+                            // Process the line if it's not empty
+                            if (currentRawLine.Length > 0)
                             {
-                                HandleLine(currentString.ToString());
-                                currentString.Clear();
+                                HandleRawLine(currentRawLine);
+                                currentRawLine = string.Empty;
                             }
                             continue;
                         }
+
+                        // Otherwise, append the character to the current line
                         else
                         {
-                            // append non-linebreak characters to the current string
-                            currentString.Append(chars[i]);
+                            currentRawLine += chars[i];
                         }
                     }
                 }
 
-                // sleep for a short period
+                // Sleep to prevent high CPU usage
                 Thread.Sleep(readInterval);
             }
 
-            if (debugThreads)
-                Debug.LogWarning("Exited receive thread.");
+            if (showThreadDebug)
+                Debug.Log($"{Tags.thread} Read thread stopped");
         }
 
-        /// <summary>
-        /// Handle a completed line from the network stream.
-        /// </summary>
-        private void HandleLine(string raw)
+        private bool CheckConnection(Socket socket)
         {
-            if (debugIRC)
-                Debug.Log("<color=#005ae0><b>[IRC INPUT]</b></color> " + raw);
+            bool poll = socket.Poll(1000, SelectMode.SelectRead);
+            bool available = (socket.Available == 0);
+
+            if ((poll && available) || !socket.Connected)
+                return false;
+            else
+                return true;
+        }
+
+        private void HandleRawLine(string raw)
+        {
+            if (showIRCDebug)
+                Debug.Log($"{Tags.read} {raw}");
 
             string ircString = raw;
             string tagString = string.Empty;
 
+            // Parsing the raw IRC lines...
+
             if (raw[0] == '@')
             {
                 int ind = raw.IndexOf(' ');
-
                 tagString = raw.Substring(0, ind);
                 ircString = raw.Substring(ind).TrimStart();
             }
@@ -110,6 +114,8 @@ namespace Incredulous.Twitch
                     case "NOTICE": // = Notice
                         HandleNOTICE(ircString, tagString);
                         break;
+
+                    // RPL messages
                     case "353": // = Successful channel join
                     case "001": // = Successful IRC connection
                         HandleRPL(type);
@@ -117,91 +123,69 @@ namespace Incredulous.Twitch
                 }
             }
 
-            // Respond to PING messages
+            // Respond to PING messages with PONG
             if (raw.StartsWith("PING"))
-                SendCommand("PONG :tmi.twitch.tv");
+                Pong();
 
-            // Notify when PONG messages are received.
+            // Alert when PONG messages are received
             if (raw.StartsWith(":tmi.twitch.tv PONG"))
-                alertQueue.Enqueue(ConnectionAlert.Pong);
+                alertQueue.Enqueue(IRCReply.PONG_RECEIVED);
         }
 
         /// <summary>
-        /// Handle a NOTICE message from the server.
+        /// Handle a PRIVMSG message
+        /// </summary>
+        private void HandlePRIVMSG(string ircString, string tagString)
+        {
+            var login = ParseHelper.ParseLoginName(ircString);
+            var channel = ParseHelper.ParseChannel(ircString);
+            var message = ParseHelper.ParseMessage(ircString);
+            var tags = ParseHelper.ParseTags(tagString);
+
+            // Sort emotes by startIndex to match emote order in the actual chat message
+            if (tags.emotes.Count > 0)
+                tags.emotes.Sort((a, b) => a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
+
+            // Queue new chatter object
+            chatterQueue.Enqueue(new Chatter(login, channel, message, tags));
+        }
+
+        /// <summary>
+        /// Handle a USERSTATE message
+        /// </summary>
+        private void HandleUSERSTATE(string ircString, string tagString)
+        {
+            var tags = ParseHelper.ParseTags(tagString);
+            ClientUserTags = tags;
+            UpdateRateLimits(); // Update rate limits based on client tags
+        }
+
+        /// <summary>
+        /// Handle a NOTICE message
         /// </summary>
         private void HandleNOTICE(string ircString, string tagString)
         {
             if (ircString.Contains(":Login authentication failed"))
             {
-                isConnected = false;
-                alertQueue.Enqueue(ConnectionAlert.BadLogin);
+                alertQueue.Enqueue(IRCReply.BAD_LOGIN);
             }
         }
 
         /// <summary>
-        /// Handle an RPL message from the server.
+        /// Handle an RPL message
         /// </summary>
         private void HandleRPL(string type)
         {
             switch (type)
             {
                 case "001":
-                    alertQueue.Enqueue(ConnectionAlert.ConnectedToServer);
-                    SendCommand("JOIN #" + twitchCredentials.channel.ToLower(), true);
+                    alertQueue.Enqueue(IRCReply.CONNECTED_TO_SERVER);
+                    SendCommand("JOIN #" + channel.ToLower(), true);
                     break;
                 case "353":
-                    isConnected = true;
-                    alertQueue.Enqueue(ConnectionAlert.JoinedChannel);
+                    alertQueue.Enqueue(IRCReply.JOINED_CHANNEL);
                     break;
-            }
-        }
-
-        /// <summary>
-        /// Handle a PRIVMSG command form the server.
-        /// </summary>
-        private void HandlePRIVMSG(string ircString, string tagString)
-        {
-            // Parse PRIVMSG
-            var login = ParseHelper.ParseLoginName(ircString);
-            var channel = ParseHelper.ParseChannel(ircString);
-            var message = ParseHelper.ParseMessage(ircString);
-            var tags = ParseHelper.ParseTags(tagString);
-
-            // Sort emotes to match emote order with the chat message (compares emote indexes)
-            if (tags.emotes.Count > 0)
-                tags.emotes.Sort((a, b) => 1 * a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
-
-            // Queue chatter object
-            chatterQueue.Enqueue(new Chatter(login, channel, message, tags));
-        }
-
-        /// <summary>
-        /// Handle a USERSTATE command form the server.
-        /// </summary>
-        private void HandleUSERSTATE(string ircString, string tagString)
-        {
-            // Update the client user tags
-            var tags = ParseHelper.ParseTags(tagString);
-            clientUserTags = tags;
-            UpdateRateLimits(tags);
-        }
-
-        /// <summary>
-        /// Checks whether the socket is still connected to the network.
-        /// </summary>
-        private bool CheckSocketConnection(Socket socket)
-        {
-            var poll = socket.Poll(1000, SelectMode.SelectRead);
-            var avail = (socket.Available == 0);
-            if ((poll && avail) || !socket.Connected)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
             }
         }
     }
-
 }
