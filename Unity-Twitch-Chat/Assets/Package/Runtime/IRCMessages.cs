@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
-namespace Incredulous.Twitch
+namespace UnityTwitchChat
 {
-
     [System.Serializable]
     public struct ChatterEmote
     {
@@ -26,7 +25,7 @@ namespace Incredulous.Twitch
     [System.Serializable]
     public class IRCTags
     {
-        public string colorHex = "#FFFFFF";
+        public string colorHex = string.Empty;
         public string displayName = string.Empty;
         public string channelId = string.Empty;
         public string userId = string.Empty;
@@ -34,23 +33,17 @@ namespace Incredulous.Twitch
         public ChatterBadge[] badges = new ChatterBadge[0];
         public List<ChatterEmote> emotes = new List<ChatterEmote>();
 
-        /// <summary>
-        /// Returns whether the tags contain a given emote.
-        /// </summary>
-        public bool ContainsEmote(string emote)
+        public bool ContainsEmote(string emoteId)
         {
             foreach (ChatterEmote e in emotes)
             {
-                if (e.id == emote)
+                if (e.id == emoteId)
                     return true;
             }
 
             return false;
         }
 
-        /// <summary>
-        /// Returns whether the tags contain a given badge.
-        /// </summary>
         public bool HasBadge(string badge)
         {
             foreach (ChatterBadge b in badges)
@@ -62,5 +55,4 @@ namespace Incredulous.Twitch
             return false;
         }
     }
-
 }
