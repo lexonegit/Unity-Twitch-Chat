@@ -18,7 +18,8 @@ namespace Lexone.UnityTwitchChat
         public IRCTags tags = null;
 
         /// <summary>
-        /// Returns the RGBA color of the chatter's name (tags.colorHex)
+        /// <para>Returns the RGBA color of the chatter's name (tags.colorHex)</para>
+        /// <para>Note that the color will be white if the user has not set their name color</para>
         /// </summary>
         public Color GetNameColor()
         {
@@ -28,7 +29,9 @@ namespace Lexone.UnityTwitchChat
             )
                 return color;
             else
-                return new Color(1, 1, 1, 1); // Failed parsing color -> return white
+                // User has not set a name color, or parsing failed somehow -> return white
+                // TODO: Return a random color instead (Native Twitch chat does this, although it's not fully random)
+                return new Color(1, 1, 1, 1);
         }
 
         /// <summary>
@@ -42,7 +45,8 @@ namespace Lexone.UnityTwitchChat
         }
 
         /// <summary>
-        /// Returns true if the chatter's message contains a given emote (by emote ID)
+        /// <para>Returns true if the chatter's message contains a given emote (by emote ID)</para>
+        /// <para>You can find emote IDs by using the Twitch API, or 3rd party sites</para>
         /// </summary>
         public bool ContainsEmote(string emoteId) => tags.ContainsEmote(emoteId);
 
