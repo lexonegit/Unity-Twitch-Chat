@@ -141,12 +141,12 @@ namespace Lexone.UnityTwitchChat
             var login = ParseHelper.ParseLoginName(ircString);
             var channel = ParseHelper.ParseChannel(ircString);
             var message = ParseHelper.ParseMessage(ircString);
-            var tags = ParseHelper.ParseTags(tagString);
+            var tags = ParseHelper.ParseTags(tagString, useBackupRandomNameColor);
 
             // Sort emotes by startIndex to match emote order in the actual chat message
             if (tags.emotes.Length > 0)
             {
-                Array.Sort(tags.emotes, (a, b) => 
+                Array.Sort(tags.emotes, (a, b) =>
                     a.indexes[0].startIndex.CompareTo(b.indexes[0].startIndex));
             }
 
@@ -159,7 +159,7 @@ namespace Lexone.UnityTwitchChat
         /// </summary>
         private void HandleUSERSTATE(string ircString, string tagString)
         {
-            var tags = ParseHelper.ParseTags(tagString);
+            var tags = ParseHelper.ParseTags(tagString, useBackupRandomNameColor);
             ClientUserTags = tags;
             UpdateRateLimits(); // Update rate limits based on client tags
         }

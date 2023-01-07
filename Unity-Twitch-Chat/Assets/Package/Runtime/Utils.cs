@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Lexone.UnityTwitchChat
 {
     /// <summary>
@@ -25,5 +27,21 @@ namespace Lexone.UnityTwitchChat
         public static string write = "<color=#5274ff><b>[IRC WRITE]</b></color>";
         public static string thread = "<color=#ff5252><b>[THREAD]</b></color>";
         public static string alert = "<color=#ffae00><b>[ALERT]</b></color>";
+    }
+
+    public static class ChatColors
+    {
+        /// <summary>
+        /// <para>Contains some default colors for names</para>
+        /// </summary>
+        public static string[] defaultNameColors = new string[]
+        {
+            "#FFFFFF",
+        };
+
+        public static string GetRandomNameColor()
+        {
+            return defaultNameColors[0];
+        }
     }
 }

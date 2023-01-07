@@ -19,7 +19,7 @@ public class ListenerExample : MonoBehaviour
     private void OnChatMessage(Chatter chatter)
     {
         Debug.Log($"<color=#fef83e><b>[CHAT LISTENER]</b></color> New chat message from {chatter.tags.displayName}");
-
+        
         if (spawnCount >= maxBoxes) // Max boxes reached
         {
             Debug.LogWarning("Max amount of boxes reached, not spawning any more");

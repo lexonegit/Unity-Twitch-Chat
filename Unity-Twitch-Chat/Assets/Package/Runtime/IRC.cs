@@ -44,12 +44,15 @@ namespace Lexone.UnityTwitchChat
         [Tooltip("Limit how many data messages can be handled per frame.\n0 = unlimited.\n\nNote that setting this value to unlimited may cause lag spikes, particularly when the game is paused and then resumed, as there may be a large number of messages waiting to be processed.")]
         [SerializeField] private int maxDataPerFrame = 30;
 
+        [Tooltip("If true, chatters who haven't set their name color will be assigned a random color, instead of white.")]
+        [SerializeField] public bool useBackupRandomNameColor = false;
+
         [Header("Chat read settings (read thread)")]
 
         [Tooltip("The number of milliseconds between each time the read thread checks for new messages.")]
         [SerializeField] public int readInterval = 50;
         [Tooltip("The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.")]
-        [SerializeField] public int readBufferSize = 256;
+        [SerializeField] public int readBufferSize = 1024;
 
         [Header("Chat write settings (write thread)")]
 

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace Lexone.UnityTwitchChat
 {
@@ -25,7 +26,7 @@ namespace Lexone.UnityTwitchChat
             return symbolRegex.IsMatch(displayName);
         }
 
-        public static IRCTags ParseTags(string tagString)
+        public static IRCTags ParseTags(string tagString, bool useBackupRandomNameColor)
         {
             IRCTags tags = new IRCTags();
             string[] split = tagString.Split(';');
@@ -57,7 +58,7 @@ namespace Lexone.UnityTwitchChat
                         tags.emotes = ParseTwitchEmotes(value.Split('/'));
                         continue;
 
-                    case "room-id": // room-id is the same as channel id
+                    case "room-id": // room-id = channel ID
                         tags.channelId = value;
                         continue;
 
@@ -66,6 +67,10 @@ namespace Lexone.UnityTwitchChat
                         continue;
                 }
             }
+
+            // Not all users have set their name color, so we need to check for that
+            if (tags.colorHex.Length <= 0)
+                tags.colorHex = useBackupRandomNameColor ? ChatColors.GetRandomNameColor(): "#FFFFFF";
 
             return tags;
         }
