@@ -41,11 +41,8 @@ namespace Lexone.UnityTwitchChat
         [Tooltip("If true, the thread start and stop will be logged to the console.")]
         [SerializeField] public bool showThreadDebug = true;
 
-        [Tooltip("Limit how many data messages can be handled per frame.\n0 = unlimited.\n\nNote that setting this value to unlimited may cause lag spikes, particularly when the game is paused and then resumed, as there may be a large number of messages waiting to be processed.")]
-        [SerializeField] private int maxDataPerFrame = 30;
-
-        [Tooltip("If true, chatters who haven't set their name color will be assigned a random color, instead of white.")]
-        [SerializeField] public bool useBackupRandomNameColor = false;
+        [Tooltip("If true, chatters who haven't set their name color on Twitch will be assigned a random color, instead of white.")]
+        [SerializeField] public bool useRandomColorForUndefined = false;
 
         [Header("Chat read settings (read thread)")]
 
@@ -59,6 +56,11 @@ namespace Lexone.UnityTwitchChat
         [Tooltip("The number of milliseconds between each time the write thread checks its queues.")]
         public int writeInterval = 50;
 
+        
+        // If the game is paused for a significant amount of time and then unpaused,
+        // there could be a lot of data to handle, which could cause lag spikes.
+        // To prevent this, we limit the amount of data handled per frame.
+        private static readonly int maxDataPerFrame = 100;
         private int connectionFailCount = 0;
         private TwitchConnection connection;
         public static IRC Instance { get; private set; }
@@ -132,7 +134,7 @@ namespace Lexone.UnityTwitchChat
             // Handle pending connection alerts
             while (!alertQueue.IsEmpty)
             {
-                if (maxDataPerFrame > 0 && dataHandledThisFrame >= maxDataPerFrame)
+                if (dataHandledThisFrame >= maxDataPerFrame)
                     break;
 
                 if (alertQueue.TryDequeue(out var alert))
@@ -145,7 +147,7 @@ namespace Lexone.UnityTwitchChat
             // Handle pending chat messages
             while (!chatterQueue.IsEmpty)
             {
-                if (maxDataPerFrame > 0 && dataHandledThisFrame >= maxDataPerFrame)
+                if (dataHandledThisFrame >= maxDataPerFrame)
                     break;
 
                 if (chatterQueue.TryDequeue(out var chatter))
@@ -291,6 +293,7 @@ namespace Lexone.UnityTwitchChat
                 Debug.LogWarning("Chat messages cannot be sent with anonymous login");
                 return;
             }
+
             connection.SendChatMessage(message);
         }
     }
