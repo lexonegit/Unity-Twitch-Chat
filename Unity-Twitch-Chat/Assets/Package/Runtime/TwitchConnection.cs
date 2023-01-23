@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Net.Sockets;
 using System.Threading;
@@ -34,7 +35,11 @@ namespace Lexone.UnityTwitchChat
             this.showIRCDebug = irc.showIRCDebug;
             this.showThreadDebug = irc.showThreadDebug;
 
-            this.useBackupRandomNameColor = irc.useBackupRandomNameColor;
+            this.useRandomColorForUndefined = irc.useRandomColorForUndefined;
+
+            // Session based randomness. This is used for random name colors
+            // Native Twitch chat seems to do this as well
+            this.sessionRandom = new Random((int)UnityEngine.Time.time); 
         }
 
         public TcpClient tcpClient { get; private set; }
@@ -63,7 +68,7 @@ namespace Lexone.UnityTwitchChat
         private readonly int writeInterval;
         private readonly bool showIRCDebug;
         private readonly bool showThreadDebug;
-        private readonly bool useBackupRandomNameColor;
+        private readonly bool useRandomColorForUndefined;
 
         private readonly ConcurrentQueue<IRCReply> alertQueue;
         private readonly ConcurrentQueue<Chatter> chatterQueue;

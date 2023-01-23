@@ -1,4 +1,7 @@
+using System;
 using UnityEngine;
+
+using Random = System.Random;
 
 namespace Lexone.UnityTwitchChat
 {
@@ -31,17 +34,44 @@ namespace Lexone.UnityTwitchChat
 
     public static class ChatColors
     {
-        /// <summary>
-        /// <para>Contains some default colors for names</para>
-        /// </summary>
         public static string[] defaultNameColors = new string[]
         {
             "#FFFFFF",
+            "#000000",
+            "#FF0000"
         };
 
-        public static string GetRandomNameColor()
+        public static string GetRandomNameColor(Random rnd)
         {
-            return defaultNameColors[0];
+            return defaultNameColors[rnd.Next(0, defaultNameColors.Length)];
+        }
+
+
+        public static float grayscaleLow = 0.3f;
+        public static float grayscaleHigh = 0.9f;
+
+        /// <summary>
+        /// <para>Normalizes the color in a similar manner to Native Twitch chat</para>
+        /// <para>Very bright colors are darkened, very dark colors are brightened to make them more readable</para>
+        /// </summary>
+        public static Color NormalizeColor(Color original)
+        {
+            if (original.grayscale == 0)
+            {
+                return new Color(grayscaleLow, grayscaleLow, grayscaleLow);
+            }
+
+            if (original.grayscale < grayscaleLow)
+            {
+                return new Color(original.r * 2f, original.g * 2f, original.b * 2f);
+            }
+
+            if (original.grayscale > grayscaleHigh)
+            {
+                return new Color(original.r / 2f, original.g / 2f, original.b / 2f);
+            }
+
+            return original;
         }
     }
 }

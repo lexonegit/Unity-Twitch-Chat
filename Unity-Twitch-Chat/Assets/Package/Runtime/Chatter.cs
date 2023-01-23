@@ -20,10 +20,15 @@ namespace Lexone.UnityTwitchChat
         /// <summary>
         /// <para>Returns the RGBA color of the chatter's name (tags.colorHex)</para>
         /// </summary>
-        public Color GetNameColor()
+        public Color GetNameColor(bool normalize = true)
         {
             if (ColorUtility.TryParseHtmlString(tags.colorHex, out Color color))
-                return color;
+            {
+                if (normalize)
+                    return ChatColors.NormalizeColor(color);
+                else
+                    return color;
+            }
             else
                 return Color.white; // Parsing failed somehow, return default white
         }
