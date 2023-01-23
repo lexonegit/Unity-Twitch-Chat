@@ -279,5 +279,19 @@ namespace Lexone.UnityTwitchChat
             if (showIRCDebug)
                 Debug.Log($"{Tags.alert} Disconnected from Twitch IRC");
         }
+
+        /// <summary>
+        /// Sends a chat message to the channel
+        /// </summary>
+        /// <param name="message">The message to send</param>
+        public void SendChatMessage(string message)
+        {
+            if (useAnonymousLogin)
+            {
+                Debug.LogWarning("Chat messages cannot be sent with anonymous login");
+                return;
+            }
+            connection.SendChatMessage(message);
+        }
     }
 }
