@@ -1,8 +1,10 @@
 # Unity Twitch Chat
 
-This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.<br>The primary goal is to be able to read and send chat messages as efficiently as possible.
+This is a lightweight and efficient [Twitch.tv IRC](https://dev.twitch.tv/docs/irc/) client for Unity.
 
-In short, this allows you to integrate Twitch Chat to your Unity projects.
+In short, this allows you to integrate Twitch Chat to your Unity projects.<br>The primary goal is to be able to read and send chat messages as efficiently as possible.
+
+
 
 ## Chat message example
 <img src="https://user-images.githubusercontent.com/18125997/210407885-b2c49e1e-4537-41e9-ad5b-2d8c4c8f1077.png">
@@ -25,7 +27,7 @@ In short, this allows you to integrate Twitch Chat to your Unity projects.
 
 ## Installation
 
-- Open Unity Package Manager (Window -> Package Manager)
+- Open Unity Package Manager <i>(Window -> Package Manager)</i>
 - Click the `+` button in the top left corner
 - Select `Add package from git URL...`
 - Copy and paste the following URL:<br>
@@ -37,7 +39,7 @@ https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Asset
 
 ## Quick start
 1. Install the Unity package (see above)
-2. Create a new empty GameObject and add the TwitchIRC component.
+2. Create a new empty GameObject and add the `Twitch IRC` component.
 3. In the inspector, set your Twitch authentication details (OAuth, username, channel) 
 You can generate an OAuth token at https://twitchapps.com/tmi/
 OAuth and username are not needed if `Use Anonymous Login` is enabled. 
