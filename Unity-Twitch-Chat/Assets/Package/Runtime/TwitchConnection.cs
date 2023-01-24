@@ -36,10 +36,6 @@ namespace Lexone.UnityTwitchChat
             this.showThreadDebug = irc.showThreadDebug;
 
             this.useRandomColorForUndefined = irc.useRandomColorForUndefined;
-
-            // Session based randomness. This is used for random name colors
-            // Native Twitch chat seems to do this as well
-            this.sessionRandom = new Random((int)UnityEngine.Time.time); 
         }
 
         public TcpClient tcpClient { get; private set; }

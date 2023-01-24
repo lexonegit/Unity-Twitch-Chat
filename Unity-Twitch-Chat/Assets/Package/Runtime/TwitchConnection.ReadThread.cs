@@ -14,7 +14,9 @@ namespace Lexone.UnityTwitchChat
         private byte[] inputBuffer;
         private char[] chars;
         private Decoder decoder = Encoding.UTF8.GetDecoder();
-        private Random sessionRandom;
+
+        // Used to generate session based random colors for undefined users
+        private int sessionRandom = DateTime.Now.Second; 
 
         private void ReadThreadLoop()
         {
@@ -145,11 +147,11 @@ namespace Lexone.UnityTwitchChat
             var channel = ParseHelper.ParseChannel(ircString);
             var message = ParseHelper.ParseMessage(ircString);
             var tags = ParseHelper.ParseTags(tagString);
-
+            
             // Not all users have set their Twitch name color, so we need to check for that
             if (tags.colorHex.Length <= 0)
                 tags.colorHex = useRandomColorForUndefined 
-                    ? ChatColors.GetRandomNameColor(sessionRandom)
+                    ? ChatColors.GetRandomNameColor(sessionRandom, login)
                     : "#FFFFFF";
 
             // Sort emotes by startIndex to match emote order in the actual chat message

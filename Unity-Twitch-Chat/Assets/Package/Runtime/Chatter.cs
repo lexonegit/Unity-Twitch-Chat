@@ -19,6 +19,7 @@ namespace Lexone.UnityTwitchChat
 
         /// <summary>
         /// <para>Returns the RGBA color of the chatter's name (tags.colorHex)</para>
+        /// <param name="normalize">Should the name color be normalized, if needed?</param>
         /// </summary>
         public Color GetNameColor(bool normalize = true)
         {
