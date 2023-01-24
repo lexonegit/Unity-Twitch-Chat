@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2023-01-24
+
+### Added
+- Native Twitch chat-like name color behavior
+    - Users that have not set their name color will be assigned a random color (session based)
+    - Chatter.GetNameColor() now normalizes the color if needed, meaning that if the color is either too bright or too dark, it will be adjusted to be more readable
+
+- Color normalization test scene (ExampleProject)
+
+
+### Changed
+- Minor changes to ExampleProject
+
+### Removed
+- Removed maxDataPerFrame from inspector
+
 ## [1.2.0] - 2023-01-03
 
 ### Added
