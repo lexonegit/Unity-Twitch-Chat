@@ -19,19 +19,19 @@ namespace Lexone.UnityTwitchChat
 
         /// <summary>
         /// <para>Returns the RGBA color of the chatter's name (tags.colorHex)</para>
-        /// <para>Note that the color will be white if the user has not set their name color</para>
+        /// <param name="normalize">Should the name color be normalized, if needed?</param>
         /// </summary>
-        public Color GetNameColor()
+        public Color GetNameColor(bool normalize = true)
         {
-            if (
-                tags.colorHex.Length > 0 &&
-                ColorUtility.TryParseHtmlString(tags.colorHex, out Color color)
-            )
-                return color;
+            if (ColorUtility.TryParseHtmlString(tags.colorHex, out Color color))
+            {
+                if (normalize)
+                    return ChatColors.NormalizeColor(color);
+                else
+                    return color;
+            }
             else
-                // User has not set a name color, or parsing failed somehow -> return white
-                // TODO: Return a random color instead (Native Twitch chat does this, although it's not fully random)
-                return new Color(1, 1, 1, 1);
+                return Color.white; // Parsing failed somehow, return default white
         }
 
         /// <summary>

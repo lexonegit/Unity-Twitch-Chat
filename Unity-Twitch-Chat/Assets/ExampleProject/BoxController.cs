@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using Lexone.UnityTwitchChat;
 
+/// <summary>
+/// This is an example script that shows some examples on how you could use the information from a Chatter object.
+/// </summary>
 public class BoxController : MonoBehaviour
 {
     public Transform ui;
@@ -23,7 +26,7 @@ public class BoxController : MonoBehaviour
         // meaning that it only contains characters: a-z, A-Z, 0-9, _ (most fonts support these characters)
         // If not "font-safe" then use login name instead, which should always be "font-safe"
         nameText.text = chatter.IsDisplayNameFontSafe() ? chatter.tags.displayName : chatter.login;
-        //nameText.color = chatter.GetNameColor();
+        nameText.color = chatter.GetNameColor();
 
         // Change box color to match chatter's primary badge
         if (chatter.HasBadge("broadcaster"))
