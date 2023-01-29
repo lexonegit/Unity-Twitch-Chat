@@ -190,7 +190,7 @@ namespace Lexone.UnityTwitchChat
         }
 
         [ContextMenu("Connect")]
-        private void Connect()
+        public void Connect()
         {
             if (useAnonymousLogin)
             {
