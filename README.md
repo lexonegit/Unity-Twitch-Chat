@@ -58,6 +58,8 @@ Spawn chatters as jumping boxes. Box color is based on their primary badge.
 - **IRC.Connect()** -> Connects to Twitch IRC
 - **IRC.Disconnect()** - Disconnects from Twitch IRC
 - **IRC.SendChatMessage(string message)** -> Sends a chat message to the channel
+- **IRC.JoinChannel(string channel)** -> Join a Twitch channel
+- **IRC.LeaveChannel(string channel)** -> Leave a Twitch channel
 - **IRC.Ping()** -> Sends a PING message to the Twitch IRC server
 - **IRC.OnMessageReceived** -> Event that is invoked when a chat message is received
 - **IRC.OnConnectionAlert** -> Event that is invoked when a connection alert is received
