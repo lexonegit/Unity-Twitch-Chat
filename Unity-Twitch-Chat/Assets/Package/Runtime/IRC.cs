@@ -296,5 +296,25 @@ namespace Lexone.UnityTwitchChat
 
             connection.SendChatMessage(message);
         }
+
+        /// <summary>
+        /// Join a new channel
+        /// </summary>
+        /// <param name="channel">The channel to join</param>
+        public void JoinChannel(string channel) 
+        {
+            if (channel != "")
+                connection.SendCommand("JOIN #" + channel.ToLower(), true);
+        }
+
+        /// <summary>
+        /// Leaves a channel
+        /// </summary>
+        /// <param name="channel">The channel to leave</param>
+        public void LeaveChannel(string channel) 
+        {
+            if (channel != "")
+                connection.SendCommand("PART #" + channel.ToLower(), true);
+        }
     }
 }
