@@ -773,7 +773,7 @@ MonoBehaviour:
   showThreadDebug: 1
   useRandomColorForUndefined: 1
   readInterval: 50
-  readBufferSize: 1024
+  readBufferSize: 256
   writeInterval: 50
 --- !u!4 &1312367230
 Transform:

@@ -48,15 +48,15 @@ namespace Lexone.UnityTwitchChat
 
         [Tooltip("The number of milliseconds between each time the read thread checks for new messages.")]
         [SerializeField] public int readInterval = 50;
-        [Tooltip("The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data.")]
-        [SerializeField] public int readBufferSize = 1024;
+        [Tooltip("The capacity of the read buffer. Smaller values consume less memory but require more cycles to retrieve data (CPU usage)")]
+        [SerializeField] public ReadBufferSize readBufferSize = ReadBufferSize._256;
 
         [Header("Chat write settings (write thread)")]
 
         [Tooltip("The number of milliseconds between each time the write thread checks its queues.")]
         public int writeInterval = 50;
 
-        
+
         // If the game is paused for a significant amount of time and then unpaused,
         // there could be a lot of data to handle, which could cause lag spikes.
         // To prevent this, we limit the amount of data handled per frame.
@@ -301,7 +301,7 @@ namespace Lexone.UnityTwitchChat
         /// Join a new channel
         /// </summary>
         /// <param name="channel">The channel to join</param>
-        public void JoinChannel(string channel) 
+        public void JoinChannel(string channel)
         {
             if (channel != "")
                 connection.SendCommand("JOIN #" + channel.ToLower(), true);
@@ -311,7 +311,7 @@ namespace Lexone.UnityTwitchChat
         /// Leaves a channel
         /// </summary>
         /// <param name="channel">The channel to leave</param>
-        public void LeaveChannel(string channel) 
+        public void LeaveChannel(string channel)
         {
             if (channel != "")
                 connection.SendCommand("PART #" + channel.ToLower(), true);
