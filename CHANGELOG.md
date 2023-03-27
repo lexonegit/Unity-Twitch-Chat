@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2023-03-27
+
+### Added
+- Added JoinChannel and LeaveChannel methods
+
+### Changed
+- Fixed decoded chars array being too small issue
+- Switched to using StringBuilder when decoding IRC messages
+- Upgraded ExampleProject to Unity 2021.3.21f1 (LTS)
+
+
 ## [1.2.1] - 2023-01-24
 
 ### Added
