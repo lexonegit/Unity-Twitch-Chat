@@ -43,7 +43,7 @@ https://github.com/lexonegit/Unity-Twitch-Chat.git?path=/Unity-Twitch-Chat/Asset
 You can generate an OAuth token at https://twitchapps.com/tmi/
 OAuth and username are not needed if `Use Anonymous Login` is enabled. 
 4. Make sure `Connect On Start` is enabled and press play – You should now see JOIN messages, etc. in the console.
-5. To start handling chat messages, add a listener to the `IRC.OnMessageReceived` event. The listener will receive `Chatter` objects which contain information about the chat message, such as the chatter name, message, emotes, etc...
+5. To start handling chat messages, add a listener to the `IRC.OnChatMessage` event. The listener will receive `Chatter` objects which contain information about the chat message, such as the chatter name, message, emotes, etc...
 
 <i>Having issues? Check out the included ExampleProject for a better understanding.</i>
 
@@ -60,7 +60,7 @@ Spawn chatters as jumping boxes. Box color is based on their primary badge.
 - **IRC.JoinChannel(string channel)** -> Join a Twitch channel
 - **IRC.LeaveChannel(string channel)** -> Leave a Twitch channel
 - **IRC.Ping()** -> Sends a PING message to the Twitch IRC server
-- **IRC.OnMessageReceived** -> Event that is invoked when a chat message is received
+- **IRC.OnChatMessage** -> Event that is invoked when a chat message is received
 - **IRC.OnConnectionAlert** -> Event that is invoked when a connection alert is received
 - **IRC.ClientUserTags** -> The tags (badges, name color, etc) of the client user
 
