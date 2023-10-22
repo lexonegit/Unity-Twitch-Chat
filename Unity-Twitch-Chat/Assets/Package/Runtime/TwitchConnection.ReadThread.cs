@@ -3,73 +3,71 @@ using System;
 using System.Text;
 using System.Threading;
 using System.Net.Sockets;
-
-using Random = System.Random;
+using System.IO;
 
 namespace Lexone.UnityTwitchChat
 {
     internal partial class TwitchConnection
     {
-        private string currentRawLine;
-        private byte[] inputBuffer;
-        private char[] chars;
-        private Decoder decoder = Encoding.UTF8.GetDecoder();
-
         // Used to generate session based random colors for undefined users
-        private int sessionRandom = DateTime.Now.Second; 
+        private int sessionRandom = DateTime.Now.Second;
 
         private void ReadThreadLoop()
         {
             if (showThreadDebug)
                 Debug.Log($"{Tags.thread} Read thread started");
 
-            Socket socket = tcpClient.Client;
-            currentRawLine = string.Empty;
-            inputBuffer = new byte[readBufferSize];
-            chars = new char[readBufferSize];
-
-            while (ThreadsRunning)
+            using (NetworkStream stream = tcpClient.GetStream())
             {
-                if (!CheckConnection(socket))
+                byte[] readBuffer = new byte[readBufferSize];
+                StringBuilder currentLine = new StringBuilder();
+                Decoder decoder = Encoding.UTF8.GetDecoder();
+
+                // Temporary solution(?):
+                // Certain multi-byte UTF-8 characters can result in overflowing (special characters)
+                // So we add a little extra space to the chars array just to be safe
+                char[] chars = new char[readBufferSize + Mathf.Clamp(readBufferSize / 4, 1, 32)];
+
+                while (ThreadsRunning)
                 {
-                    // Sometimes, right after a new TcpClient is created, the socket says
-                    // it has been shutdown. This catches that case and attempts reconnecting.
-                    alertQueue.Enqueue(IRCReply.CONNECTION_INTERRUPTED);
-                    break;
-                }
-
-                while (socket.Available > 0)
-                {
-                    // Receive data from the socket
-                    int bytesReceived = socket.Receive(inputBuffer);
-
-                    // Decode data into text
-                    int charCount = decoder.GetChars(inputBuffer, 0, bytesReceived, chars, 0);
-
-                    for (int i = 0; i < charCount; ++i)
+                    // Check if the connection is still alive
+                    if (!CheckConnection(tcpClient.Client))
                     {
-                        // If the character is a linebreak, we have a complete line
-                        if (chars[i] == '\n' || chars[i] == '\r')
-                        {
-                            // Process the line if it's not empty
-                            if (currentRawLine.Length > 0)
-                            {
-                                HandleRawLine(currentRawLine);
-                                currentRawLine = string.Empty;
-                            }
-                            continue;
-                        }
+                        alertQueue.Enqueue(IRCReply.CONNECTION_INTERRUPTED);
+                        return;
+                    }
 
-                        // Otherwise, append the character to the current line
-                        else
+                    while (stream.DataAvailable)
+                    {
+                        // Read the bytes from the stream
+                        int bytesReceived = stream.Read(readBuffer, 0, readBufferSize);
+
+                        // Decode the bytes to chars
+                        int charsDecoded = decoder.GetChars(readBuffer, 0, bytesReceived, chars, 0);
+                        
+                        for (int i = 0; i < charsDecoded; ++i)
                         {
-                            currentRawLine += chars[i];
+                            // Character is a linebreak -> We have a complete line
+                            if (chars[i] == '\n' || chars[i] == '\r')
+                            {
+                                // If the line is not empty, handle it
+                                if (currentLine.Length > 0)
+                                {
+                                    HandleRawLine(currentLine.ToString());
+                                    currentLine.Clear();
+                                }
+                            }
+                            else
+                            {
+                                // Append the character to the current line
+                                currentLine.Append(chars[i]);
+                            }
                         }
                     }
-                }
 
-                // Sleep to prevent high CPU usage
-                Thread.Sleep(readInterval);
+                    // Sleep to prevent high CPU usage
+                    Thread.Sleep(readInterval);
+                }
             }
 
             if (showThreadDebug)
@@ -86,6 +84,7 @@ namespace Lexone.UnityTwitchChat
             else
                 return true;
         }
+
 
         private void HandleRawLine(string raw)
         {
@@ -147,10 +146,10 @@ namespace Lexone.UnityTwitchChat
             var channel = ParseHelper.ParseChannel(ircString);
             var message = ParseHelper.ParseMessage(ircString);
             var tags = ParseHelper.ParseTags(tagString);
-            
+
             // Not all users have set their Twitch name color, so we need to check for that
             if (tags.colorHex.Length <= 0)
-                tags.colorHex = useRandomColorForUndefined 
+                tags.colorHex = useRandomColorForUndefined
                     ? ChatColors.GetRandomNameColor(sessionRandom, login)
                     : "#FFFFFF";
 

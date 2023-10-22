@@ -23,7 +23,7 @@ namespace Lexone.UnityTwitchChat
             this.nick = irc.username;
             this.channel = irc.channel;
 
-            this.readBufferSize = irc.readBufferSize;
+            this.readBufferSize = (int)irc.readBufferSize; // Parse enum value
             this.readInterval = irc.readInterval;
             this.writeInterval = irc.writeInterval;
 
