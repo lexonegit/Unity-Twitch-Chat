@@ -44,7 +44,7 @@ namespace Lexone.UnityTwitchChat
 
                         // Decode the bytes to chars
                         int charsDecoded = decoder.GetChars(readBuffer, 0, bytesReceived, chars, 0);
-                        
+
                         for (int i = 0; i < charsDecoded; ++i)
                         {
                             // Character is a linebreak -> We have a complete line
@@ -194,7 +194,10 @@ namespace Lexone.UnityTwitchChat
             {
                 case "001":
                     alertQueue.Enqueue(IRCReply.CONNECTED_TO_SERVER);
-                    SendCommand("JOIN #" + channel.ToLower(), true);
+
+                    if (joinChannelOnStart)
+                        IRC.Instance.JoinChannel(channel);
+                        
                     break;
                 case "353":
                     alertQueue.Enqueue(IRCReply.JOINED_CHANNEL);

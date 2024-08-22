@@ -29,11 +29,14 @@ namespace Lexone.UnityTwitchChat
 
         [Header("General settings")]
 
-        [Tooltip("If true, duplicate instances will be destroyed. The first instance will be set to DontDestroyOnLoad.")]
-        [SerializeField] public bool singleton = true;
-
         [Tooltip("If true, the client will connect to Twitch IRC on Start.")]
-        [SerializeField] private bool connectOnStart = true;
+        [SerializeField] private bool connectIRCOnStart = true;
+
+        [Tooltip("If true, the client will automatically join the given channel upon a successful connection.")]
+        [SerializeField] public bool joinChannelOnStart = true;
+
+        [Tooltip("If true, IRC will be set to DontDestroyOnLoad and any duplicate instances will be removed.")]
+        [SerializeField] public bool dontDestroyOnLoad = true;
 
         [Tooltip("If true, every IRC message sent and received will be logged to the console.")]
         [SerializeField] public bool showIRCDebug = true;
@@ -86,7 +89,7 @@ namespace Lexone.UnityTwitchChat
         {
             if (Instance)
             {
-                if (singleton)
+                if (dontDestroyOnLoad)
                 {
                     gameObject.SetActive(false);
                     Destroy(gameObject);
@@ -96,14 +99,14 @@ namespace Lexone.UnityTwitchChat
             {
                 Instance = this;
 
-                if (singleton)
+                if (dontDestroyOnLoad)
                     DontDestroyOnLoad(gameObject);
             }
         }
 
         private void Start()
         {
-            if (connectOnStart)
+            if (connectIRCOnStart)
                 Connect();
         }
 
@@ -114,7 +117,7 @@ namespace Lexone.UnityTwitchChat
 
         private void OnDestroy()
         {
-            if (singleton && Instance == this)
+            if (dontDestroyOnLoad && Instance == this)
                 Instance = null;
 
             BlockingDisconnect();
@@ -212,11 +215,11 @@ namespace Lexone.UnityTwitchChat
                     oauth = oauth.Substring(6);
             }
 
-            if (channel.Length <= 0)
-            {
-                alertQueue.Enqueue(IRCReply.MISSING_LOGIN_INFO);
-                return;
-            }
+            // if (channel.Length <= 0)
+            // {
+            //     alertQueue.Enqueue(IRCReply.MISSING_LOGIN_INFO);
+            //     return;
+            // }
 
             StartCoroutine(StartConnection());
             IEnumerator StartConnection()
@@ -290,7 +293,7 @@ namespace Lexone.UnityTwitchChat
         {
             if (useAnonymousLogin)
             {
-                Debug.LogWarning("Chat messages cannot be sent with anonymous login");
+                Debug.LogError("Chat messages cannot be sent with anonymous login");
                 return;
             }
 
@@ -303,8 +306,13 @@ namespace Lexone.UnityTwitchChat
         /// <param name="channel">The channel to join</param>
         public void JoinChannel(string channel)
         {
-            if (channel != "")
-                connection.SendCommand("JOIN #" + channel.ToLower(), true);
+            if (channel == "")
+            {
+                Debug.LogError("Failed joining channel. Channel name is empty");
+                return;
+            }
+
+            connection.SendCommand("JOIN #" + channel.ToLower(), true);
         }
 
         /// <summary>
@@ -313,8 +321,13 @@ namespace Lexone.UnityTwitchChat
         /// <param name="channel">The channel to leave</param>
         public void LeaveChannel(string channel)
         {
-            if (channel != "")
-                connection.SendCommand("PART #" + channel.ToLower(), true);
+            if (channel == "")
+            {
+                Debug.LogError("Failed leaving channel. Channel name is empty");
+                return;
+            }
+
+            connection.SendCommand("PART #" + channel.ToLower(), true);
         }
     }
 }

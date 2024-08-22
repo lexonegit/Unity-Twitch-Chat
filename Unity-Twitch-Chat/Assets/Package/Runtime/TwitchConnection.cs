@@ -32,6 +32,7 @@ namespace Lexone.UnityTwitchChat
 
             this.rateLimit = RateLimit.ChatRegular;
 
+            this.joinChannelOnStart = irc.joinChannelOnStart;
             this.showIRCDebug = irc.showIRCDebug;
             this.showThreadDebug = irc.showThreadDebug;
 
@@ -62,6 +63,7 @@ namespace Lexone.UnityTwitchChat
         private readonly int readBufferSize;
         private readonly int readInterval;
         private readonly int writeInterval;
+        private readonly bool joinChannelOnStart;
         private readonly bool showIRCDebug;
         private readonly bool showThreadDebug;
         private readonly bool useRandomColorForUndefined;
