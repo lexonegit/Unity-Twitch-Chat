@@ -26,19 +26,19 @@ namespace Lexone.UnityTwitchChat
             switch (alert)
             {
                 case IRCReply.CONNECTED_TO_SERVER:
-                    return "Connected";
+                    return "Connected to IRC";
                 case IRCReply.PONG_RECEIVED:
                     return "Pong!";
                 case IRCReply.JOINED_CHANNEL:
                     return "Joined channel";
                 case IRCReply.MISSING_LOGIN_INFO:
-                    return "Missing login information";
+                    return "Missing login information (OAuth or username)";
                 case IRCReply.BAD_LOGIN:
                     return "Login failed";
                 case IRCReply.CONNECTION_INTERRUPTED:
-                    return "Connection interrupted";
+                    return "Connection to IRC interrupted";
                 case IRCReply.NO_CONNECTION:
-                    return "Connection failed";
+                    return "Connection to IRC failed";
                 default:
                     return "Unknown alert";
             }
