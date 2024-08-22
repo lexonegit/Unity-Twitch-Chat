@@ -8,21 +8,25 @@ public class ListenerExample : MonoBehaviour
     public Chatter chatterObject; // Latest chatter object
     public BoxController boxPrefab;
     public int maxBoxes = 100;
-
     private int spawnCount = 0;
 
     private void Start()
     {
+        // Add a listener for the IRC.OnChatMessage event
         IRC.Instance.OnChatMessage += OnChatMessage;
     }
 
     private void OnChatMessage(Chatter chatter)
     {
-        Debug.Log($"<color=#fef83e><b>[CHAT LISTENER]</b></color> New chat message from {chatter.tags.displayName}");
+        // Handle new chat messages...
+
+        Debug.Log($"<color=#fef83e><b>[LISTENER EXAMPLE]</b></color> New chat message from {chatter.tags.displayName}");
+
+        // Debug.Log($"Message content: {chatter.message}");
         
-        if (spawnCount >= maxBoxes) // Max boxes reached
+        if (spawnCount >= maxBoxes)
         {
-            Debug.LogWarning("Max amount of boxes reached, not spawning any more");
+            Debug.LogWarning("Max amount of boxes reached!");
             return;
         }
 
