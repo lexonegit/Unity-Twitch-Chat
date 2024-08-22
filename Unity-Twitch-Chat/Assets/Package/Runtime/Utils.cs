@@ -77,7 +77,8 @@ namespace Lexone.UnityTwitchChat
             return defaultNameColors[n % defaultNameColors.Length];
         }
 
-        public static float grayscaleLow = 0.3f;
+        // These values can be adjusted to control how dark and bright colors are handled
+        public static float grayscaleLow = 0.3f; 
         public static float grayscaleHigh = 1.0f;
         /// <summary>
         /// <para>Normalizes the color if needed to make it more readable</para>
