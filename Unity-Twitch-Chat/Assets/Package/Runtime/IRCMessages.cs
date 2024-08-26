@@ -29,6 +29,7 @@ namespace Lexone.UnityTwitchChat
         public string displayName = string.Empty;
         public string channelId = string.Empty;
         public string userId = string.Empty;
+        public bool isHighlighted;
 
         public ChatterBadge[] badges = new ChatterBadge[0];
         public ChatterEmote[] emotes = new ChatterEmote[0];

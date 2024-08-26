@@ -64,6 +64,10 @@ namespace Lexone.UnityTwitchChat
                     case "user-id":
                         tags.userId = value;
                         continue;
+
+                    case "msg-id":
+                        tags.isHighlighted = value == "highlighted-message";
+                        continue;
                 }
             }
 
